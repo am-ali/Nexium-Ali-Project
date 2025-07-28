@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Resume AI Application
+
+This project is a modern web application built with Next.js 15 that allows users to upload or input their resumes and receive AI-tailored versions for specific job roles. The application streamlines the resume customization process using AI-powered workflows, enabling users to significantly improve their job applications with minimal effort.
+
+## Features
+
+- **Magic Link Authentication**: Users can log in securely using their email without the need for a password.
+- **Resume Upload & Input**: Users can upload their resumes in PDF/DOCX format or input them directly in a rich text editor.
+- **AI-Powered Tailoring**: The application analyzes job descriptions and tailors resumes to highlight relevant skills and experiences.
+- **User Dashboard**: Users can manage multiple versions of their resumes and view tailored versions.
+- **Aesthetic UI**: The application features a modern and visually appealing user interface.
+
+## Tech Stack
+
+- **Frontend**: Next.js 15
+- **Authentication**: Supabase
+- **Database**: MongoDB
+- **AI Workflows**: n8n
 
 ## Getting Started
 
-First, run the development server:
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd resume-ai
+   ```
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3. Set up environment variables:
+   - Create a `.env` file in the root directory and add your configuration settings.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+4. Run the application:
+   ```bash
+   npm run dev
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+5. Open your browser and navigate to `http://localhost:3000`.
 
-## Learn More
+## Contributing
 
-To learn more about Next.js, take a look at the following resources:
+Contributions are welcome! Please open an issue or submit a pull request for any enhancements or bug fixes.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project is licensed under the MIT License. See the LICENSE file for more details.

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { toast } from 'react-hot-toast';
 
 export default function HomePage() {
     const [email, setEmail] = useState('');
@@ -28,10 +29,10 @@ export default function HomePage() {
 
             if (error) throw error;
 
-            // Show success message
-            alert('Check your email for the login link!');
+            toast.success('Check your email for the login link!');
             router.push('/auth/verify');
         } catch (err) {
+            toast.error(err instanceof Error ? err.message : 'Failed to send login link');
             setError(err instanceof Error ? err.message : 'Failed to send login link');
         } finally {
             setLoading(false);

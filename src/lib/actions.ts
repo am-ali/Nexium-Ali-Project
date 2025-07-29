@@ -10,12 +10,43 @@ interface ProcessedResume {
   id: string;
   content: string;
   originalContent: string;
+  userId: string;  // Add this line
   metadata: {
     fileName?: string;
     fileType?: string;
     uploadDate: Date;
     processedDate: Date;
   };
+}
+
+async function extractFileContent(buffer: ArrayBuffer, fileType: string): Promise<string> {
+  try {
+    switch (fileType) {
+      case 'application/pdf':
+        const pdfData = await pdfParse(Buffer.from(buffer));
+        return pdfData.text
+          .replace(/\r\n/g, '\n')
+          .replace(/[^\S\r\n]+/g, ' ')
+          .replace(/\n{3,}/g, '\n\n')
+          .trim();
+
+      case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+        const docxResult = await mammoth.extractRawText({
+          buffer: Buffer.from(buffer)
+        });
+        return docxResult.value
+          .replace(/\r\n/g, '\n')
+          .replace(/[^\S\r\n]+/g, ' ')
+          .replace(/\n{3,}/g, '\n\n')
+          .trim();
+
+      default:
+        throw new Error('Unsupported file type');
+    }
+  } catch (error) {
+    console.error('Content extraction error:', error);
+    throw new Error('Failed to extract content from file');
+  }
 }
 
 export async function processUpload(data: { file?: File; text?: string }): Promise<{ 
@@ -25,126 +56,69 @@ export async function processUpload(data: { file?: File; text?: string }): Promi
 }> {
   try {
     const supabase = await createClient();
-    
-    // Get authenticated user data
     const { data: { user }, error: userError } = await supabase.auth.getUser();
 
     if (userError || !user) {
       throw new Error('Unauthorized');
     }
 
-    const userId = user.id;
-
-    // First, ensure the storage bucket exists and has proper RLS policies
-    const { data: bucketData, error: bucketError } = await supabase
-      .storage
-      .getBucket('resumes');
-
-    if (bucketError) {
-      // Create bucket if it doesn't exist
-      await supabase.storage.createBucket('resumes', {
-        public: false,
-        fileSizeLimit: 10485760, // 10MB
-        allowedMimeTypes: ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain']
-      });
-    }
-
-    // Handle file upload
-    let content = '';
-    let fileName = '';
-    let fileType = '';
-
-    if (data.file) {
-      const buffer = await data.file.arrayBuffer();
-      const fileExt = data.file.name.split('.').pop()?.toLowerCase();
-      fileName = `${userId}/${Date.now()}-${data.file.name}`;
-
-      // Upload file with proper path including user ID
-      const { data: uploadData, error: uploadError } = await supabase
-        .storage
-        .from('resumes')
-        .upload(fileName, buffer, {
-          contentType: data.file.type,
-          upsert: true
-        });
-
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        throw new Error(`Upload failed: ${uploadError.message}`);
-      }
-
-      // Extract text content based on file type
-      switch (fileExt) {
-        case 'pdf':
-          content = await extractPdfContent(buffer);
-          break;
-        case 'docx':
-          content = await extractDocxContent(buffer);
-          break;
-        case 'txt':
-          content = new TextDecoder().decode(buffer);
-          break;
-        default:
-          throw new Error(`Unsupported file type: .${fileExt}`);
-      }
-
-      fileType = data.file.type;
-    } else if (data.text) {
-      content = data.text;
-      fileName = `text-${Date.now()}.txt`;
-      fileType = 'text/plain';
-    } else {
+    if (!data.file && !data.text) {
       throw new Error('No content provided');
     }
 
-    // Process with n8n
-    const n8nResponse = await fetch(process.env.N8N_API_URL!, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.N8N_API_KEY}`,
-      },
-      body: JSON.stringify({
-        content,
-        userId,
-        metadata: {
-          fileName,
-          fileType,
-        }
-      })
-    });
+    let content = data.text || '';
+    let fileName = '';
+    let fileType = 'text/plain';
 
-    if (!n8nResponse.ok) {
-      throw new Error('Processing failed');
+    if (data.file) {
+      const buffer = await data.file.arrayBuffer();
+      fileName = `${user.id}/${Date.now()}-${data.file.name}`;
+      fileType = data.file.type;
+
+      // Extract content from file
+      content = await extractFileContent(buffer, fileType);
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase
+        .storage
+        .from('resumes')
+        .upload(fileName, buffer, {
+          contentType: fileType,
+          upsert: false
+        });
+
+      if (uploadError) {
+        throw new Error(`Upload failed: ${uploadError.message}`);
+      }
     }
 
-    const processedContent = await n8nResponse.json();
-
     // Store in MongoDB
-    const mongoDb = await connect();
-    const collection = mongoDb.collection('resumes');
-
-    const resumeDoc: ProcessedResume = {
-      id: `${userId}-${Date.now()}`,
-      content: processedContent.result,
+    const db = await connect();
+    const result = await db.collection('resumes').insertOne({
+      userId: user.id,
       originalContent: content,
-      metadata: {
-        fileName,
-        fileType,
-        uploadDate: new Date(),
-        processedDate: new Date(),
-      }
-    };
+      fileName,
+      fileType,
+      uploadDate: new Date(),
+      status: 'uploaded'
+    });
 
-    await collection.insertOne(resumeDoc);
-
-    // Revalidate the page
-    revalidatePath('/dashboard/upload');
     revalidatePath('/dashboard');
 
     return {
       success: true,
-      data: resumeDoc
+      data: {
+        id: result.insertedId.toString(),
+        content,
+        originalContent: content,
+        userId: user.id,
+        metadata: {
+          fileName,
+          fileType,
+          uploadDate: new Date(),
+          processedDate: new Date()
+        }
+      }
     };
 
   } catch (error) {
@@ -153,45 +127,5 @@ export async function processUpload(data: { file?: File; text?: string }): Promi
       success: false,
       error: error instanceof Error ? error.message : 'Failed to process upload'
     };
-  }
-}
-
-async function extractPdfContent(buffer: ArrayBuffer): Promise<string> {
-  try {
-    // Convert ArrayBuffer to Buffer for pdf-parse
-    const data = await pdfParse(Buffer.from(buffer));
-    
-    // Clean up the extracted text
-    return data.text
-      .replace(/\r\n/g, '\n') // Normalize line endings
-      .replace(/[^\S\r\n]+/g, ' ') // Replace multiple spaces with single space
-      .replace(/\n{3,}/g, '\n\n') // Replace multiple blank lines with double line break
-      .trim();
-  } catch (error) {
-    console.error('PDF extraction error:', error);
-    throw new Error('Failed to extract text from PDF');
-  }
-}
-
-async function extractDocxContent(buffer: ArrayBuffer): Promise<string> {
-  try {
-    // Convert ArrayBuffer to Buffer for mammoth
-    const result = await mammoth.extractRawText({
-      buffer: Buffer.from(buffer)
-    });
-
-    if (result.messages.length > 0) {
-      console.warn('DOCX extraction warnings:', result.messages);
-    }
-
-    // Clean up the extracted text
-    return result.value
-      .replace(/\r\n/g, '\n') // Normalize line endings
-      .replace(/[^\S\r\n]+/g, ' ') // Replace multiple spaces with single space
-      .replace(/\n{3,}/g, '\n\n') // Replace multiple blank lines with double line break
-      .trim();
-  } catch (error) {
-    console.error('DOCX extraction error:', error);
-    throw new Error('Failed to extract text from DOCX');
   }
 }

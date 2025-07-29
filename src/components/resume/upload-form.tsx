@@ -1,13 +1,19 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { toast } from 'react-hot-toast';
 import React, { useState } from 'react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Card } from '../ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
+import { processUpload } from '@/lib/actions';
 
 interface UploadFormProps {
     onSubmit: (data: { file?: File; text?: string }) => Promise<void>;
 }
 
 const UploadForm: React.FC<UploadFormProps> = ({ onSubmit }) => {
+    const router = useRouter();
     const [file, setFile] = useState<File | null>(null);
     const [resumeText, setResumeText] = useState<string>('');
     const [loading, setLoading] = useState(false);
@@ -44,9 +50,19 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit }) => {
         
         setLoading(true);
         try {
-            await onSubmit({ file: file || undefined, text: resumeText || undefined });
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to upload resume');
+            const result = await processUpload({
+                file: file || undefined,
+                text: resumeText || undefined,
+            });
+
+            if (!result.success) {
+                throw new Error(result.error);
+            }
+
+            toast.success('Resume uploaded successfully!');
+            router.push('/dashboard');
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Upload failed');
         } finally {
             setLoading(false);
         }

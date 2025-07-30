@@ -13,19 +13,23 @@ export interface UserPreferences {
 }
 
 export interface Resume {
-    id: string;
+    id?: string;
+    _id?: string;
     userId: string;
-    title: string;
-    content: string;
+    title?: string;
+    content?: string;
+    originalContent?: string;
     fileName?: string;
     fileUrl?: string;
     fileType?: 'pdf' | 'docx' | 'text';
-    skills: string[];
-    experience: Experience[];
-    education: Education[];
-    createdAt: Date;
-    updatedAt: Date;
-    version: number;
+    skills?: string[];
+    experience?: Experience[];
+    education?: Education[];
+    createdAt?: Date;
+    updatedAt?: Date;
+    version?: number;
+    uploadDate?: Date;
+    status?: string;
 }
 
 export interface Experience {
@@ -50,7 +54,8 @@ export interface Education {
 }
 
 export interface JobDescription {
-    id: string;
+    id?: string;
+    _id?: string;
     title: string;
     company: string;
     description: string;

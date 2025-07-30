@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { connect } from '@/lib/mongodb';
 import { createClient } from '@/lib/supabase/server';
+import { connect } from '@/lib/mongodb';
 
 export async function GET() {
   try {
@@ -16,14 +16,14 @@ export async function GET() {
 
     try {
       const db = await connect();
-      const resumes = await db
-        .collection('resumes')
+      const tailoredResumes = await db
+        .collection('tailored_resumes')
         .find({ userId: user.id })
-        .sort({ uploadDate: -1 })
+        .sort({ createdAt: -1 })
         .toArray();
 
       // Convert MongoDB _id to string and add id field
-      const formattedResumes = resumes.map(resume => ({
+      const formattedResumes = tailoredResumes.map(resume => ({
         ...resume,
         _id: resume._id.toString(),
         id: resume._id.toString()
@@ -38,10 +38,10 @@ export async function GET() {
       );
     }
   } catch (error) {
-    console.error('Error fetching resumes:', error);
+    console.error('Error fetching tailored resumes:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
   }
-}
+} 

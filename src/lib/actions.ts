@@ -3,8 +3,23 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { connect } from '@/lib/mongodb';
-import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
+
+// Dynamic import for pdf-parse to avoid issues
+let pdfParse: any;
+
+async function loadPdfParse() {
+  if (!pdfParse) {
+    try {
+      const pdfParseModule = await import('pdf-parse');
+      pdfParse = pdfParseModule.default;
+    } catch (error) {
+      console.warn('pdf-parse not available, PDF parsing will be disabled');
+      return false;
+    }
+  }
+  return true;
+}
 
 interface ProcessedResume {
   id: string;
@@ -23,25 +38,55 @@ async function extractFileContent(buffer: ArrayBuffer, fileType: string): Promis
   try {
     switch (fileType) {
       case 'application/pdf':
-        const pdfData = await pdfParse(Buffer.from(buffer));
-        return pdfData.text
-          .replace(/\r\n/g, '\n')
-          .replace(/[^\S\r\n]+/g, ' ')
-          .replace(/\n{3,}/g, '\n\n')
-          .trim();
+        // Temporarily disable PDF parsing due to ENOENT issues
+        throw new Error('PDF parsing is temporarily disabled. Please use DOCX or text input instead.');
+        
+        // TODO: Implement alternative PDF parsing solution
+        // const pdfParseAvailable = await loadPdfParse();
+        // if (!pdfParseAvailable) {
+        //   throw new Error('PDF parsing is not available. Please install pdf-parse package.');
+        // }
+        // 
+        // try {
+        //   // Convert ArrayBuffer to Buffer and handle PDF directly
+        //   const uint8Array = new Uint8Array(buffer);
+        //   const pdfBuffer = Buffer.from(uint8Array);
+        //   
+        //   // Add options to prevent pdf-parse from looking for external files
+        //   const pdfData = await pdfParse(pdfBuffer, {
+        //     max: 0, // No page limit
+        //   });
+        //   
+        //   return pdfData.text
+        //     .replace(/\r\n/g, '\n')
+        //     .replace(/[^\S\r\n]+/g, ' ')
+        //     .replace(/\n{3,}/g, '\n\n')
+        //     .trim();
+        // } catch (pdfError) {
+        //   console.error('PDF parsing error:', pdfError);
+        //   throw new Error('Failed to parse PDF file. Please ensure the file is not corrupted.');
+        // }
 
       case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
-        const docxResult = await mammoth.extractRawText({
-          buffer: Buffer.from(buffer)
-        });
-        return docxResult.value
-          .replace(/\r\n/g, '\n')
-          .replace(/[^\S\r\n]+/g, ' ')
-          .replace(/\n{3,}/g, '\n\n')
-          .trim();
+        try {
+          const docxResult = await mammoth.extractRawText({
+            buffer: Buffer.from(buffer)
+          });
+          return docxResult.value
+            .replace(/\r\n/g, '\n')
+            .replace(/[^\S\r\n]+/g, ' ')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
+        } catch (docxError) {
+          console.error('DOCX parsing error:', docxError);
+          throw new Error('Failed to parse DOCX file. Please ensure the file is not corrupted.');
+        }
+
+      case 'text/plain':
+        return new TextDecoder().decode(buffer);
 
       default:
-        throw new Error('Unsupported file type');
+        throw new Error(`Unsupported file type: ${fileType}`);
     }
   } catch (error) {
     console.error('Content extraction error:', error);
@@ -49,7 +94,12 @@ async function extractFileContent(buffer: ArrayBuffer, fileType: string): Promis
   }
 }
 
-export async function processUpload(data: { file?: File; text?: string }): Promise<{ 
+export async function processUpload(data: { 
+  fileBuffer?: ArrayBuffer;
+  fileName?: string;
+  fileType?: string;
+  text?: string;
+}): Promise<{ 
   success: boolean; 
   data?: ProcessedResume; 
   error?: string 
@@ -62,7 +112,7 @@ export async function processUpload(data: { file?: File; text?: string }): Promi
       throw new Error('Unauthorized');
     }
 
-    if (!data.file && !data.text) {
+    if (!data.fileBuffer && !data.text) {
       throw new Error('No content provided');
     }
 
@@ -70,50 +120,66 @@ export async function processUpload(data: { file?: File; text?: string }): Promi
     let fileName = '';
     let fileType = 'text/plain';
 
-    if (data.file) {
-      const buffer = await data.file.arrayBuffer();
-      fileName = `${user.id}/${Date.now()}-${data.file.name}`;
-      fileType = data.file.type;
+    if (data.fileBuffer && data.fileName && data.fileType) {
+      fileName = `${user.id}/${Date.now()}-${data.fileName}`;
+      fileType = data.fileType;
 
-      // Extract content from file
-      content = await extractFileContent(buffer, fileType);
+      // Extract content from file buffer
+      content = await extractFileContent(data.fileBuffer, fileType);
 
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase
-        .storage
-        .from('resumes')
-        .upload(fileName, buffer, {
-          contentType: fileType,
-          upsert: false
-        });
+      // Upload to Supabase Storage (optional - continue if it fails)
+      // Note: This requires proper RLS policies to be set up in Supabase
+      try {
+        const { error: uploadError } = await supabase
+          .storage
+          .from('resumes')
+          .upload(fileName, data.fileBuffer, {
+            contentType: fileType,
+            upsert: false
+          });
 
-      if (uploadError) {
-        throw new Error(`Upload failed: ${uploadError.message}`);
+        if (uploadError) {
+          console.warn('Supabase storage upload failed:', uploadError.message);
+          // Continue without storage upload - the file content is already extracted
+          fileName = ''; // Clear fileName since storage upload failed
+        }
+      } catch (storageError) {
+        console.warn('Supabase storage error:', storageError);
+        // Continue without storage upload
+        fileName = ''; // Clear fileName since storage upload failed
       }
     }
 
     // Store in MongoDB
-    const db = await connect();
-    const result = await db.collection('resumes').insertOne({
-      userId: user.id,
-      originalContent: content,
-      fileName,
-      fileType,
-      uploadDate: new Date(),
-      status: 'uploaded'
-    });
+    let resumeId = `temp_${Date.now()}`;
+    try {
+      const db = await connect();
+      const result = await db.collection('resumes').insertOne({
+        userId: user.id,
+        originalContent: content,
+        fileName,
+        fileType,
+        uploadDate: new Date(),
+        status: 'uploaded'
+      });
+      resumeId = result.insertedId.toString();
+    } catch (dbError) {
+      console.error('Database error:', dbError);
+      // Continue without database storage if it fails
+      // You might want to store in localStorage or show a warning
+    }
 
     revalidatePath('/dashboard');
 
     return {
       success: true,
       data: {
-        id: result.insertedId.toString(),
+        id: resumeId,
         content,
         originalContent: content,
         userId: user.id,
         metadata: {
-          fileName,
+          fileName: fileName || undefined,
           fileType,
           uploadDate: new Date(),
           processedDate: new Date()

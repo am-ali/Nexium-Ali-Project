@@ -7,13 +7,16 @@ import {
   HomeIcon, 
   DocumentArrowUpIcon,
   DocumentTextIcon,
-  ClockIcon 
+  ClockIcon,
+  BriefcaseIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
   { name: 'Upload Resume', href: '/dashboard/upload', icon: DocumentArrowUpIcon },
-  { name: 'Preview', href: '/dashboard/preview', icon: DocumentTextIcon },
+  { name: 'Job Descriptions', href: '/dashboard/jobs', icon: BriefcaseIcon },
+  { name: 'Tailor Resume', href: '/dashboard/tailor', icon: SparklesIcon },
   { name: 'History', href: '/dashboard/history', icon: ClockIcon },
 ];
 

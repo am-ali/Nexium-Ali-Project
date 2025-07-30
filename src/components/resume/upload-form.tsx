@@ -6,7 +6,6 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { processUpload } from '@/lib/actions';
 
 interface UploadFormProps {
     onSubmit: (data: { file?: File; text?: string }) => Promise<void>;
@@ -26,9 +25,9 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit }) => {
                 setError('File size must be less than 5MB');
                 return;
             }
-            if (!['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+            if (!['application/vnd.openxmlformats-officedocument.wordprocessingml.document']
                 .includes(selectedFile.type)) {
-                setError('Only PDF and DOCX files are allowed');
+                setError('Only DOCX files are allowed (PDF upload is temporarily disabled)');
                 return;
             }
             setFile(selectedFile);
@@ -50,18 +49,37 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit }) => {
         
         setLoading(true);
         try {
-            const result = await processUpload({
-                file: file || undefined,
-                text: resumeText || undefined,
-            });
-
-            if (!result.success) {
-                throw new Error(result.error);
+            const formData = new FormData();
+            if (file) {
+                // Create a new Blob with the correct type
+                const blob = new Blob([await file.arrayBuffer()], { type: file.type });
+                formData.append('file', blob, file.name);
+            }
+            if (resumeText) {
+                formData.append('text', resumeText);
             }
 
-            toast.success('Resume uploaded successfully!');
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            let result;
+            try {
+                result = await response.json();
+            } catch (jsonError) {
+                console.error('JSON parsing error:', jsonError);
+                throw new Error('Invalid response from server');
+            }
+
+            if (!response.ok) {
+                throw new Error(result?.error || 'Upload failed');
+            }
+
+            toast.success('Resume processed successfully!');
             router.push('/dashboard');
         } catch (error) {
+            console.error('Upload error:', error);
             toast.error(error instanceof Error ? error.message : 'Upload failed');
         } finally {
             setLoading(false);
@@ -75,7 +93,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit }) => {
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                         <Input
                             type="file"
-                            accept=".pdf,.docx"
+                            accept=".docx"
                             onChange={handleFileChange}
                             label="Drop your resume here or click to browse"
                             className="hidden"
@@ -85,7 +103,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit }) => {
                             htmlFor="file-upload"
                             className="cursor-pointer text-blue-600 hover:text-blue-700"
                         >
-                            {file ? file.name : 'Choose a file'}
+                            {file ? file.name : 'Choose a DOCX file'}
                         </label>
                     </div>
 

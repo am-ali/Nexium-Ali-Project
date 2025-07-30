@@ -14,10 +14,13 @@ const AuthPage = () => {
     setLoading(true);
 
     try {
+      // Use environment variable for production URL or fallback to current origin
+      const redirectUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+      
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${redirectUrl}/auth/callback`,
         },
       });
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,25 +35,7 @@ export default function DashboardPage(): JSX.Element {
   const [recentResumes, setRecentResumes] = useState<any[]>([]);
   const [recentJobs, setRecentJobs] = useState<any[]>([]);
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      router.push('/auth');
-      return;
-    }
-    
-    setUser(user);
-    await fetchDashboardData();
-    setLoading(false);
-  };
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       // Fetch all data in parallel
       const [resumesRes, jobsRes] = await Promise.all([
@@ -83,7 +65,25 @@ export default function DashboardPage(): JSX.Element {
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     }
-  };
+  }, []);
+
+  const checkAuth = useCallback(async () => {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      router.push('/auth');
+      return;
+    }
+    
+    setUser(user);
+    await fetchDashboardData();
+    setLoading(false);
+  }, [router, fetchDashboardData]);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   if (loading) {
     return (
@@ -106,7 +106,7 @@ export default function DashboardPage(): JSX.Element {
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-8 text-white">
         <h1 className="text-3xl font-bold mb-2">Welcome back!</h1>
         <p className="text-blue-100 text-lg">
-          Ready to create your perfect resume? Let's get started with AI-powered tailoring.
+          Ready to create your perfect resume? Let&apos;s get started with AI-powered tailoring.
         </p>
       </div>
 
@@ -239,7 +239,7 @@ export default function DashboardPage(): JSX.Element {
                   </div>
                 </div>
               ))
-            }
+            )}
           </div>
         </Card>
 
@@ -278,7 +278,7 @@ export default function DashboardPage(): JSX.Element {
                   </div>
                 </div>
               ))
-            }
+            )}
           </div>
         </Card>
       </div>

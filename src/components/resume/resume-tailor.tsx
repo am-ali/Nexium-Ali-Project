@@ -235,9 +235,12 @@ const ResumeTailor: React.FC<ResumeTailorProps> = () => {
           <li>Click "Tailor Resume" to generate an AI-optimized version</li>
           <li>Review and download your tailored resume</li>
         </ol>
+        <p>
+          &quot;Automatically tailored to match job requirements&quot;
+        </p>
       </Card>
     </div>
   );
 };
 
-export default ResumeTailor; 
+export default ResumeTailor;

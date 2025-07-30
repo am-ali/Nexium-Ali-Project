@@ -6,7 +6,7 @@ import { connect } from '@/lib/mongodb';
 import mammoth from 'mammoth';
 
 // Dynamic import for pdf-parse to avoid issues
-let pdfParse: any;
+let pdfParse: typeof import('pdf-parse').default | null = null;
 
 async function loadPdfParse() {
   if (!pdfParse) {

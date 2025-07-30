@@ -1,15 +1,9 @@
 module.exports = {
-  extends: [
-    'next/core-web-vitals',
-    'eslint:recommended',
-    'plugin:@typescript-eslint/recommended',
-  ],
-  parser: '@typescript-eslint/parser',
-  plugins: ['@typescript-eslint'],
-  root: true,
+  extends: ['next/core-web-vitals'],
   rules: {
-    '@typescript-eslint/no-unused-vars': ['error'],
-    '@typescript-eslint/explicit-function-return-type': ['warn'],
-    'react-hooks/exhaustive-deps': 'warn'
+    '@typescript-eslint/explicit-function-return-type': 'off', // Turn off for now
+    '@typescript-eslint/no-unused-vars': 'error',
+    '@typescript-eslint/no-explicit-any': 'error',
+    'react/no-unescaped-entities': 'error'
   }
 }

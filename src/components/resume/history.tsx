@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { Resume, TailoredResume } from '@/types';
+import type { Resume as ResumeType } from '@/types';
 import { Button } from '@/components/ui/button';
 
 interface ResumeItem {
@@ -20,6 +20,11 @@ interface ResumeItem {
   uploadDate?: Date;
   originalResumeId?: string;
   jobDescriptionId?: string;
+}
+
+interface HistoryProps {
+  resumes: ResumeType[];
+  onSelect: (resume: ResumeType) => void;
 }
 
 export const ResumeHistory: React.FC = () => {

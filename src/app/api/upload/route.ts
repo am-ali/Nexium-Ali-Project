@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server';
 import { processUpload } from '@/lib/actions';
 import { createClient } from '@/lib/supabase/server';
 
-export async function POST(request: Request) {
+export const runtime = 'nodejs';
+
+export async function POST(request: Request): Promise<NextResponse> {
   try {
     const supabase = await createClient();
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -15,24 +17,25 @@ export async function POST(request: Request) {
     const file = formData.get('file') as File | null;
     const text = formData.get('text') as string | null;
 
-    // Convert File to ArrayBuffer before processing
     let fileBuffer: ArrayBuffer | undefined;
+    let fileName: string | undefined;
+    let fileType: string | undefined;
+
     if (file) {
       fileBuffer = await file.arrayBuffer();
+      fileName = file.name;
+      fileType = file.type;
     }
 
     const result = await processUpload({
       fileBuffer,
-      fileName: file?.name,
-      fileType: file?.type,
+      fileName,
+      fileType,
       text: text || undefined,
     });
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error || 'Upload processing failed' },
-        { status: 400 }
-      );
+      throw new Error(result.error);
     }
 
     return NextResponse.json(result);

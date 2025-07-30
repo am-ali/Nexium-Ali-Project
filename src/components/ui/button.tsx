@@ -3,7 +3,7 @@
 import React from 'react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: 'primary' | 'secondary' | 'outline';
+    variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'gradient';
     size?: 'sm' | 'md' | 'lg';
     isLoading?: boolean;
 }
@@ -17,16 +17,18 @@ export const Button: React.FC<ButtonProps> = ({
     disabled,
     ...props 
 }) => {
-    const baseStyles = 'rounded-lg transition-all duration-200 font-medium';
+    const baseStyles = 'rounded-xl transition-all duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900';
     const sizeStyles = {
         sm: 'px-3 py-1.5 text-sm',
-        md: 'px-4 py-2 text-base',
+        md: 'px-4 py-2.5 text-base',
         lg: 'px-6 py-3 text-lg'
     };
     const variantStyles = {
-        primary: 'bg-blue-600 hover:bg-blue-700 text-white',
-        secondary: 'bg-gray-600 hover:bg-gray-700 text-white',
-        outline: 'border-2 border-blue-600 text-blue-600 hover:bg-blue-50'
+        primary: 'bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white focus:ring-purple-500 shadow-lg hover:shadow-xl',
+        secondary: 'bg-slate-700 hover:bg-slate-600 text-white focus:ring-slate-500 border border-slate-600',
+        outline: 'border-2 border-purple-500/50 text-purple-400 hover:bg-purple-500/10 hover:border-purple-400 focus:ring-purple-500',
+        ghost: 'text-slate-300 hover:text-white hover:bg-slate-800/50',
+        gradient: 'bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 hover:from-cyan-400 hover:via-purple-400 hover:to-pink-400 text-white shadow-lg hover:shadow-xl'
     };
 
     return (

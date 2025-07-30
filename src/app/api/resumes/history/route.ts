@@ -26,14 +26,21 @@ export async function GET(): Promise<NextResponse> {
     const db = await connect();
     console.log('Connected to MongoDB');
     
-    const resumes = await db.collection('resumes').find({
+    // Fetch original resumes
+    const originalResumes = await db.collection('resumes').find({
       userId: user.id
     }).sort({ createdAt: -1 }).toArray();
 
-    console.log('Found resumes:', resumes.length);
+    // Fetch tailored resumes
+    const tailoredResumes = await db.collection('tailored_resumes').find({
+      userId: user.id
+    }).sort({ createdAt: -1 }).toArray();
 
-    // Transform MongoDB documents to proper format
-    const transformedResumes = resumes.map(resume => ({
+    console.log('Found original resumes:', originalResumes.length);
+    console.log('Found tailored resumes:', tailoredResumes.length);
+
+    // Transform original resumes
+    const transformedOriginalResumes = originalResumes.map(resume => ({
       id: resume._id.toString(),
       _id: resume._id.toString(),
       userId: resume.userId,
@@ -50,10 +57,49 @@ export async function GET(): Promise<NextResponse> {
       updatedAt: resume.updatedAt,
       uploadDate: resume.uploadDate,
       status: resume.status,
-      version: resume.version
+      version: resume.version,
+      type: 'original', // Add type to distinguish
+      tailoredVersions: resume.tailoredVersions || []
     }));
 
-    return NextResponse.json(transformedResumes);
+    // Transform tailored resumes
+    const transformedTailoredResumes = tailoredResumes.map(resume => ({
+      id: resume._id.toString(),
+      _id: resume._id.toString(),
+      userId: resume.userId,
+      title: resume.title,
+      content: resume.tailoredContent,
+      originalContent: resume.originalContent,
+      fileName: resume.fileName || `tailored-${resume.jobTitle}`,
+      fileUrl: resume.fileUrl,
+      fileType: 'text/plain',
+      skills: resume.skills,
+      experience: resume.experience,
+      education: resume.education,
+      createdAt: resume.createdAt,
+      updatedAt: resume.updatedAt,
+      uploadDate: resume.createdAt,
+      status: resume.status || 'tailored',
+      version: 1,
+      type: 'tailored', // Add type to distinguish
+      matchScore: resume.matchScore,
+      suggestedChanges: resume.suggestedChanges,
+      jobTitle: resume.jobTitle,
+      company: resume.company,
+      originalResumeId: resume.originalResumeId,
+      jobDescriptionId: resume.jobDescriptionId
+    }));
+
+    // Combine and sort by creation date
+    const allResumes = [...transformedOriginalResumes, ...transformedTailoredResumes]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    const response = NextResponse.json(allResumes);
+    
+    // Add cache headers to prevent unnecessary requests
+    response.headers.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=30');
+    
+    return response;
   } catch (error) {
     console.error('Error fetching resume history:', error);
     return NextResponse.json(

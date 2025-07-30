@@ -25,36 +25,75 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="w-64 bg-white shadow-sm border-r border-gray-200 h-full">
-      <nav className="mt-8 px-4">
-        <ul className="space-y-2">
-          {navigation.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <li key={item.name}>
-                <Link
-                  href={item.href}
-                  className={`
-                    group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors
-                    ${isActive 
-                      ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-700' 
-                      : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
-                    }
-                  `}
-                >
-                  <item.icon
+    <div className="w-64 bg-slate-900/95 backdrop-blur-xl border-r border-slate-700/50 h-full relative">
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 to-transparent pointer-events-none" />
+      
+      <div className="relative z-10">
+        {/* Logo/Brand area */}
+        <div className="p-6 border-b border-slate-700/50">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
+              <SparklesIcon className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-white">ResumeAI</h2>
+              <p className="text-xs text-slate-400">Smart Resume Builder</p>
+            </div>
+          </div>
+        </div>
+
+        <nav className="mt-8 px-4">
+          <ul className="space-y-2">
+            {navigation.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <li key={item.name}>
+                  <Link
+                    href={item.href}
                     className={`
-                      mr-3 h-5 w-5 flex-shrink-0
-                      ${isActive ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'}
+                      group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 relative overflow-hidden
+                      ${isActive 
+                        ? 'bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-white border border-purple-500/30' 
+                        : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
+                      }
                     `}
-                  />
-                  {item.name}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+                  >
+                    {/* Active indicator */}
+                    {isActive && (
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-purple-400 to-blue-400 rounded-r-full" />
+                    )}
+                    
+                    <item.icon
+                      className={`
+                        mr-3 h-5 w-5 flex-shrink-0 transition-colors duration-200
+                        ${isActive ? 'text-purple-400' : 'text-slate-400 group-hover:text-purple-400'}
+                      `}
+                    />
+                    {item.name}
+                    
+                    {/* Hover glow effect */}
+                    <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gradient-to-r from-purple-500/10 to-blue-500/10" />
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        {/* Bottom section */}
+        <div className="absolute bottom-4 left-4 right-4">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-slate-800/50 to-slate-700/50 border border-slate-600/50">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-blue-400" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">Welcome back!</p>
+                <p className="text-xs text-slate-400">Ready to optimize?</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

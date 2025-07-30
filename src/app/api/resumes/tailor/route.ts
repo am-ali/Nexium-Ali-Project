@@ -37,6 +37,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     try {
       const db = await connect();
+      
       // Fetch the resume
       const resumeDoc = await db.collection('resumes').findOne({
         _id: new ObjectId(resumeId),
@@ -48,6 +49,7 @@ export async function POST(request: Request): Promise<NextResponse> {
           { status: 404 }
         );
       }
+      
       // Fetch the job description
       const jobDoc = await db.collection('job_descriptions').findOne({
         _id: new ObjectId(jobId),
@@ -98,24 +100,56 @@ export async function POST(request: Request): Promise<NextResponse> {
       const aiService = new AiService({ apiKey: GEMINI_API_KEY });
       const tailoredResume = await aiService.tailorResume(resume, job);
       
-      // Save the tailored resume
-      const result = await db.collection('tailored_resumes').insertOne({
+      // Clean and format the tailored content
+      const formattedContent = tailoredResume.content || tailoredResume.originalContent || '';
+      
+      // Save the tailored resume with proper formatting
+      const tailoredResumeDoc = {
         userId: user.id,
         originalResumeId: resumeId,
         jobDescriptionId: jobId,
-        originalContent: resume.originalContent,
-        tailoredContent: tailoredResume.content || tailoredResume.originalContent,
+        title: `${resume.title || 'Resume'} - ${job.title}`,
+        originalContent: resume.originalContent || resume.content,
+        tailoredContent: formattedContent,
         matchScore: tailoredResume.matchScore,
         suggestedChanges: tailoredResume.suggestedChanges,
-        createdAt: new Date()
-      });
+        jobTitle: job.title,
+        company: job.company,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        status: 'active'
+      };
+      
+      const result = await db.collection('tailored_resumes').insertOne(tailoredResumeDoc);
+      
+      // Also update the original resume collection with a reference to this tailored version
+      await db.collection('resumes').updateOne(
+        { _id: new ObjectId(resumeId) },
+        { 
+          $addToSet: { 
+            tailoredVersions: {
+              id: result.insertedId.toString(),
+              jobTitle: job.title,
+              company: job.company,
+              matchScore: tailoredResume.matchScore,
+              createdAt: new Date()
+            }
+          },
+          $set: { updatedAt: new Date() }
+        }
+      );
       
       return NextResponse.json({
         _id: result.insertedId.toString(),
         id: result.insertedId.toString(),
-        content: tailoredResume.content || tailoredResume.originalContent,
+        title: tailoredResumeDoc.title,
+        content: formattedContent,
+        originalContent: resume.originalContent || resume.content,
         matchScore: tailoredResume.matchScore,
-        suggestedChanges: tailoredResume.suggestedChanges
+        suggestedChanges: tailoredResume.suggestedChanges,
+        jobTitle: job.title,
+        company: job.company,
+        createdAt: tailoredResumeDoc.createdAt
       });
     } catch (dbError) {
       console.error('Database error:', dbError);

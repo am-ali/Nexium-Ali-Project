@@ -16,7 +16,8 @@ const ResumeTailor: React.FC<ResumeTailorProps> = () => {
   const [jobs, setJobs] = useState<JobDescription[]>([]);
   const [selectedResume, setSelectedResume] = useState<string>('');
   const [selectedJob, setSelectedJob] = useState<string>('');
-  const [loading, setLoading] = useState(false);
+  const [loadingResumes, setLoadingResumes] = useState(true);
+  const [loadingJobs, setLoadingJobs] = useState(true);
   const [processing, setProcessing] = useState(false);
 
   // Helper functions to safely get IDs
@@ -41,6 +42,7 @@ const ResumeTailor: React.FC<ResumeTailorProps> = () => {
 
   const fetchResumes = async (): Promise<void> => {
     try {
+      setLoadingResumes(true);
       const response = await fetch('/api/resumes/history');
       if (!response.ok) throw new Error('Failed to fetch resumes');
       const data = await response.json();
@@ -48,11 +50,14 @@ const ResumeTailor: React.FC<ResumeTailorProps> = () => {
     } catch (error) {
       console.error('Error fetching resumes:', error);
       toast.error('Failed to load resumes');
+    } finally {
+      setLoadingResumes(false);
     }
   };
 
   const fetchJobs = async (): Promise<void> => {
     try {
+      setLoadingJobs(true);
       const response = await fetch('/api/jobs');
       if (!response.ok) throw new Error('Failed to fetch jobs');
       const data = await response.json();
@@ -60,6 +65,8 @@ const ResumeTailor: React.FC<ResumeTailorProps> = () => {
     } catch (error) {
       console.error('Error fetching jobs:', error);
       toast.error('Failed to load job descriptions');
+    } finally {
+      setLoadingJobs(false);
     }
   };
 
@@ -101,13 +108,29 @@ const ResumeTailor: React.FC<ResumeTailorProps> = () => {
   const selectedResumeData = resumes.find(r => getResumeId(r) === selectedResume);
   const selectedJobData = jobs.find(j => getJobId(j) === selectedJob);
 
+  // Loading skeleton component
+  const LoadingSkeleton = ({ items = 3 }: { items?: number }) => (
+    <div className="space-y-3">
+      {Array.from({ length: items }).map((_, index) => (
+        <div key={index} className="p-4 border rounded-lg animate-pulse">
+          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+          <div className="h-3 bg-gray-200 rounded w-1/2 mb-1"></div>
+          <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Resume Selection */}
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Select Your Resume</h3>
-          {resumes.length === 0 ? (
+          
+          {loadingResumes ? (
+            <LoadingSkeleton />
+          ) : resumes.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <p>No resumes found.</p>
               <Button 
@@ -148,7 +171,10 @@ const ResumeTailor: React.FC<ResumeTailorProps> = () => {
         {/* Job Description Selection */}
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Select Job Description</h3>
-          {jobs.length === 0 ? (
+          
+          {loadingJobs ? (
+            <LoadingSkeleton />
+          ) : jobs.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <p>No job descriptions found.</p>
               <Button 
@@ -220,7 +246,7 @@ const ResumeTailor: React.FC<ResumeTailorProps> = () => {
       <div className="flex justify-center space-x-4">
         <Button
           onClick={handleTailor}
-          disabled={!selectedResume || !selectedJob || processing}
+          disabled={!selectedResume || !selectedJob || processing || loadingResumes || loadingJobs}
           className="px-8"
         >
           {processing ? 'Processing...' : 'Tailor Resume'}

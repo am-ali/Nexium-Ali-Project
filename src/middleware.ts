@@ -1,43 +1,38 @@
-import { createServerClient } from '@supabase/ssr';
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import type { CookieOptions } from '@supabase/ssr';
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
-export const runtime = 'nodejs';
-
-export async function middleware(request: NextRequest): Promise<NextResponse> {
+export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
-  });
+  })
+
+  // Only process auth for dashboard routes
+  if (!request.nextUrl.pathname.startsWith('/dashboard') && 
+      !request.nextUrl.pathname.startsWith('/api') &&
+      !request.nextUrl.pathname.startsWith('/auth/callback')) {
+    return response
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return request.cookies.getAll();
+        get(name: string) {
+          return request.cookies.get(name)?.value
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options: _options }) => {
-            response.cookies.set(name, value, _options);
-          });
-          response = NextResponse.next({
-            request,
-          });
-          cookiesToSet.forEach(({ name, value, options: _options }) => {
-            response.cookies.set(name, value, _options);
-          });
+        set(name: string, value: string, options: { [key: string]: any }) {
+          response.cookies.set(name, value, options)
         },
       },
     }
-  );
+  )
 
-  await supabase.auth.getSession();
+  await supabase.auth.getSession()
 
-  return response;
+  return response
 }
 
 export const config = {
@@ -45,4 +40,4 @@ export const config = {
     '/dashboard/:path*',
     '/auth/callback',
   ],
-};
+}

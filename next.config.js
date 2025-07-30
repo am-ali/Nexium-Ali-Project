@@ -1,7 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    nodeMiddleware: true,
+    serverComponentsExternalPackages: [
+      '@supabase/supabase-js',
+      'pdf-parse',
+      'mammoth'
+    ],
     serverActions: true
   },
   typescript: {

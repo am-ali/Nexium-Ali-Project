@@ -1,37 +1,55 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import type { CookieOptions } from '@supabase/ssr';
-import type { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function createClient() {
+export const createClient = async () => {
+  const cookieStore = await cookies();
+
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get: async (name: string) => {
-          const cookieStore = await cookies();
-          return cookieStore.get(name)?.value;
+        getAll() {
+          return cookieStore.getAll();
         },
-        set: async (name: string, value: string, options: CookieOptions) => {
-          const cookieStore = await cookies();
-          cookieStore.set({
-            name,
-            value,
-            domain: options.domain,
-            path: options.path,
-            secure: options.secure,
-            sameSite: options.sameSite,
-            httpOnly: options.httpOnly,
-            maxAge: options.maxAge,
-            priority: options.priority,
-          });
-        },
-        remove: async (name: string, options: CookieOptions) => {
-          const cookieStore = await cookies();
-          cookieStore.delete(name);
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
         },
       },
     }
   );
-}
+};
+
+export const updateSession = async (request: NextRequest) => {
+  const response = NextResponse.next();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll().map(cookie => ({
+            name: cookie.name,
+            value: cookie.value
+          }));
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options: _options }) => {
+            response.cookies.set(name, value, _options);
+          });
+        },
+      },
+    }
+  );
+
+  return { response, supabase };
+};

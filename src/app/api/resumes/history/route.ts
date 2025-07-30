@@ -1,46 +1,29 @@
 import { NextResponse } from 'next/server';
-import { connect } from '@/lib/mongodb';
 import { createClient } from '@/lib/supabase/server';
 
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   try {
     const supabase = await createClient();
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    try {
-      const db = await connect();
-      const resumes = await db
-        .collection('resumes')
-        .find({ userId: user.id })
-        .sort({ uploadDate: -1 })
-        .toArray();
+    const { data, error } = await supabase
+      .from('resumes')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
 
-      // Convert MongoDB _id to string and add id field
-      const formattedResumes = resumes.map(resume => ({
-        ...resume,
-        _id: resume._id.toString(),
-        id: resume._id.toString()
-      }));
-
-      return NextResponse.json(formattedResumes);
-    } catch (dbError) {
-      console.error('Database error:', dbError);
-      return NextResponse.json(
-        { error: 'Database connection failed' },
-        { status: 500 }
-      );
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    return NextResponse.json(data);
   } catch (error) {
-    console.error('Error fetching resumes:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to fetch resume history' },
       { status: 500 }
     );
   }

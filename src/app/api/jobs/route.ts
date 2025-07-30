@@ -1,105 +1,63 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { connect } from '@/lib/mongodb';
 
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   try {
     const supabase = await createClient();
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    try {
-      const db = await connect();
-      const jobs = await db
-        .collection('job_descriptions')
-        .find({ userId: user.id })
-        .sort({ createdAt: -1 })
-        .toArray();
+    const { data, error } = await supabase
+      .from('jobs')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
 
-      // Convert MongoDB _id to string and add id field
-      const formattedJobs = jobs.map(job => ({
-        ...job,
-        _id: job._id.toString(),
-        id: job._id.toString()
-      }));
-
-      return NextResponse.json(formattedJobs);
-    } catch (dbError) {
-      console.error('Database error:', dbError);
-      return NextResponse.json(
-        { error: 'Database connection failed' },
-        { status: 500 }
-      );
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    return NextResponse.json(data);
   } catch (error) {
-    console.error('Error fetching jobs:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to fetch jobs' },
       { status: 500 }
     );
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<NextResponse> {
   try {
     const supabase = await createClient();
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
-    const { title, company, description, requirements, preferences, location, salary } = body;
-
-    if (!title || !company || !description || !location) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
-
-    try {
-      const db = await connect();
-      const result = await db.collection('job_descriptions').insertOne({
-        userId: user.id,
-        title,
-        company,
-        description,
-        requirements: requirements || [],
-        preferences: preferences || [],
-        location,
-        salary,
-        createdAt: new Date()
-      });
-
-      return NextResponse.json({
-        _id: result.insertedId.toString(),
-        id: result.insertedId.toString(),
+    
+    const { data, error } = await supabase
+      .from('jobs')
+      .insert({
         ...body,
-        createdAt: new Date()
-      });
-    } catch (dbError) {
-      console.error('Database error:', dbError);
-      return NextResponse.json(
-        { error: 'Database connection failed' },
-        { status: 500 }
-      );
+        user_id: user.id
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    return NextResponse.json(data);
   } catch (error) {
-    console.error('Error creating job:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to create job' },
       { status: 500 }
     );
   }
-} 
+}

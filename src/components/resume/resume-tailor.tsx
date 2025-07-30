@@ -19,6 +19,15 @@ const ResumeTailor: React.FC<ResumeTailorProps> = () => {
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
 
+  // Helper functions to safely get IDs
+  const getResumeId = (resume: Resume): string => {
+    return resume._id || resume.id || '';
+  };
+
+  const getJobId = (job: JobDescription): string => {
+    return job._id || job.id || '';
+  };
+
   useEffect(() => {
     fetchResumes();
     fetchJobs();
@@ -30,7 +39,7 @@ const ResumeTailor: React.FC<ResumeTailorProps> = () => {
     }
   }, [searchParams]);
 
-  const fetchResumes = async () => {
+  const fetchResumes = async (): Promise<void> => {
     try {
       const response = await fetch('/api/resumes/history');
       if (!response.ok) throw new Error('Failed to fetch resumes');
@@ -42,7 +51,7 @@ const ResumeTailor: React.FC<ResumeTailorProps> = () => {
     }
   };
 
-  const fetchJobs = async () => {
+  const fetchJobs = async (): Promise<void> => {
     try {
       const response = await fetch('/api/jobs');
       if (!response.ok) throw new Error('Failed to fetch jobs');
@@ -54,7 +63,7 @@ const ResumeTailor: React.FC<ResumeTailorProps> = () => {
     }
   };
 
-  const handleTailor = async () => {
+  const handleTailor = async (): Promise<void> => {
     if (!selectedResume || !selectedJob) {
       toast.error('Please select both a resume and a job description');
       return;
@@ -89,8 +98,8 @@ const ResumeTailor: React.FC<ResumeTailorProps> = () => {
     }
   };
 
-  const selectedResumeData = resumes.find(r => (r._id || r.id) === selectedResume);
-  const selectedJobData = jobs.find(j => (j._id || j.id) === selectedJob);
+  const selectedResumeData = resumes.find(r => getResumeId(r) === selectedResume);
+  const selectedJobData = jobs.find(j => getJobId(j) === selectedJob);
 
   return (
     <div className="space-y-6">
@@ -110,25 +119,28 @@ const ResumeTailor: React.FC<ResumeTailorProps> = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              {resumes.map((resume) => (
-                <div
-                  key={resume._id || resume.id}
-                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                    selectedResume === (resume._id || resume.id)
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                  onClick={() => setSelectedResume(resume._id || resume.id)}
-                >
-                  <h4 className="font-medium">{resume.title || 'Untitled Resume'}</h4>
-                  <p className="text-sm text-gray-600">
-                    {resume.fileName || 'Text input'}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    Created {new Date(resume.createdAt || resume.uploadDate || Date.now()).toLocaleDateString()}
-                  </p>
-                </div>
-              ))}
+              {resumes.map((resume) => {
+                const resumeId = getResumeId(resume);
+                return (
+                  <div
+                    key={resumeId}
+                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                      selectedResume === resumeId
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => resumeId && setSelectedResume(resumeId)}
+                  >
+                    <h4 className="font-medium">{resume.title || 'Untitled Resume'}</h4>
+                    <p className="text-sm text-gray-600">
+                      {resume.fileName || 'Text input'}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Created {new Date(resume.createdAt || resume.uploadDate || Date.now()).toLocaleDateString()}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           )}
         </Card>
@@ -148,21 +160,24 @@ const ResumeTailor: React.FC<ResumeTailorProps> = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              {jobs.map((job) => (
-                <div
-                  key={job._id || job.id}
-                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                    selectedJob === (job._id || job.id)
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                  onClick={() => setSelectedJob(job._id || job.id)}
-                >
-                  <h4 className="font-medium">{job.title}</h4>
-                  <p className="text-sm text-gray-600">{job.company}</p>
-                  <p className="text-xs text-gray-500">{job.location}</p>
-                </div>
-              ))}
+              {jobs.map((job) => {
+                const jobId = getJobId(job);
+                return (
+                  <div
+                    key={jobId}
+                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                      selectedJob === jobId
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => jobId && setSelectedJob(jobId)}
+                  >
+                    <h4 className="font-medium">{job.title}</h4>
+                    <p className="text-sm text-gray-600">{job.company}</p>
+                    <p className="text-xs text-gray-500">{job.location}</p>
+                  </div>
+                );
+              })}
             </div>
           )}
         </Card>
@@ -232,10 +247,10 @@ const ResumeTailor: React.FC<ResumeTailorProps> = () => {
         <ol className="list-decimal list-inside space-y-1 text-sm text-blue-800">
           <li>Select a resume from your uploaded resumes</li>
           <li>Choose a job description you want to apply for</li>
-          <li>Click "Tailor Resume" to generate an AI-optimized version</li>
+          <li>Click &quot;Tailor Resume&quot; to generate an AI-optimized version</li>
           <li>Review and download your tailored resume</li>
         </ol>
-        <p>
+        <p className="text-sm text-blue-700 mt-2">
           &quot;Automatically tailored to match job requirements&quot;
         </p>
       </Card>

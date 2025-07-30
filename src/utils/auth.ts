@@ -1,8 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
-import { cookies } from 'next/headers';
 
 export async function sendMagicLink(email: string) {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
@@ -13,7 +12,7 @@ export async function sendMagicLink(email: string) {
 }
 
 export async function getSession() {
-    const supabase = createClient();
+    const supabase = await createClient();
     try {
         const { data: { session } } = await supabase.auth.getSession();
         return session;
@@ -22,3 +21,14 @@ export async function getSession() {
         return null;
     }
 }
+
+export const getUser = async () => {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
+};
+
+export const signOut = async () => {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+};

@@ -5,7 +5,7 @@ import { ObjectId } from 'mongodb';
 import { AiService } from '@/utils/ai';
 import { Resume, JobDescription } from '@/types';
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<NextResponse> {
   try {
     const supabase = await createClient();
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -131,4 +131,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-} 
+}

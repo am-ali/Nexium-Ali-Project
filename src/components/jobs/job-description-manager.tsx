@@ -30,7 +30,7 @@ const JobDescriptionManager: React.FC<JobDescriptionManagerProps> = () => {
     fetchJobs();
   }, []);
 
-  const fetchJobs = async () => {
+  const fetchJobs = async (): Promise<void> => {
     try {
       const response = await fetch('/api/jobs');
       if (!response.ok) throw new Error('Failed to fetch jobs');
@@ -44,7 +44,7 @@ const JobDescriptionManager: React.FC<JobDescriptionManagerProps> = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setLoading(true);
 
@@ -60,7 +60,8 @@ const JobDescriptionManager: React.FC<JobDescriptionManagerProps> = () => {
         } : undefined
       };
 
-      const url = editingJob ? `/api/jobs/${editingJob.id}` : '/api/jobs';
+      const jobId = editingJob?._id || editingJob?.id;
+      const url = editingJob ? `/api/jobs/${jobId}` : '/api/jobs';
       const method = editingJob ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
@@ -84,7 +85,7 @@ const JobDescriptionManager: React.FC<JobDescriptionManagerProps> = () => {
     }
   };
 
-  const handleEdit = (job: JobDescription) => {
+  const handleEdit = (job: JobDescription): void => {
     setEditingJob(job);
     setFormData({
       title: job.title,
@@ -100,7 +101,7 @@ const JobDescriptionManager: React.FC<JobDescriptionManagerProps> = () => {
     setShowForm(true);
   };
 
-  const handleDelete = async (jobId: string) => {
+  const handleDelete = async (jobId: string): Promise<void> => {
     if (!confirm('Are you sure you want to delete this job description?')) return;
 
     try {
@@ -115,7 +116,7 @@ const JobDescriptionManager: React.FC<JobDescriptionManagerProps> = () => {
     }
   };
 
-  const resetForm = () => {
+  const resetForm = (): void => {
     setFormData({
       title: '',
       company: '',
@@ -127,6 +128,11 @@ const JobDescriptionManager: React.FC<JobDescriptionManagerProps> = () => {
       salaryMax: '',
       currency: 'USD'
     });
+  };
+
+  // Helper function to get job ID safely
+  const getJobId = (job: JobDescription): string => {
+    return job._id || job.id || '';
   };
 
   if (loading && jobs.length === 0) {
@@ -264,51 +270,55 @@ const JobDescriptionManager: React.FC<JobDescriptionManagerProps> = () => {
             No job descriptions found. Add your first job description to get started!
           </Card>
         ) : (
-          jobs.map((job) => (
-            <Card key={job._id || job.id} className="p-6">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold">{job.title}</h3>
-                  <p className="text-gray-600">{job.company} • {job.location}</p>
-                  <p className="text-sm text-gray-500 mt-2 line-clamp-2">
-                    {job.description}
-                  </p>
-                  {job.salary && (
-                    <p className="text-sm text-gray-600 mt-1">
-                      Salary: {job.salary.min.toLocaleString()} - {job.salary.max.toLocaleString()} {job.salary.currency}
+          jobs.map((job) => {
+            const jobId = getJobId(job);
+            return (
+              <Card key={jobId} className="p-6">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold">{job.title}</h3>
+                    <p className="text-gray-600">{job.company} • {job.location}</p>
+                    <p className="text-sm text-gray-500 mt-2 line-clamp-2">
+                      {job.description}
                     </p>
-                  )}
+                    {job.salary && (
+                      <p className="text-sm text-gray-600 mt-1">
+                        Salary: {job.salary.min.toLocaleString()} - {job.salary.max.toLocaleString()} {job.salary.currency}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex space-x-2 ml-4">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEdit(job)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => window.location.href = `/dashboard/tailor?jobId=${jobId}`}
+                    >
+                      Tailor Resume
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDelete(jobId)}
+                      disabled={!jobId}
+                    >
+                      Delete
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex space-x-2 ml-4">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleEdit(job)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => window.location.href = `/dashboard/tailor?jobId=${job._id || job.id}`}
-                  >
-                    Tailor Resume
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDelete(job._id || job.id)}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))
+              </Card>
+            );
+          })
         )}
       </div>
     </div>
   );
 };
 
-export default JobDescriptionManager; 
+export default JobDescriptionManager;

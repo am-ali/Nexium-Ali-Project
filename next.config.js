@@ -1,12 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  serverExternalPackages: [
+    '@supabase/supabase-js',
+    'pdf-parse',
+    'mammoth'
+  ],
   experimental: {
-    serverComponentsExternalPackages: [
-      '@supabase/supabase-js',
-      'pdf-parse',
-      'mammoth'
-    ],
-    serverActions: true
+    serverActions: {
+      allowedOrigins: ['localhost:3000']
+    }
   },
   typescript: {
     ignoreBuildErrors: false

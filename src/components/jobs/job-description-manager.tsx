@@ -177,9 +177,9 @@ const JobDescriptionManager: React.FC<JobDescriptionManagerProps> = () => {
         </div>
         <Button 
           onClick={() => setShowForm(true)}
-          className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+          className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 flex items-center justify-center"
         >
-          <PlusIcon className="h-4 w-4 mr-2" />
+          <PlusIcon className="h-4 w-4 mr-2 mx-auto" />
           Add Job Description
         </Button>
       </div>
@@ -487,9 +487,9 @@ const JobDescriptionManager: React.FC<JobDescriptionManagerProps> = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => handleEdit(job)}
-                      className="border-slate-600/50 text-slate-300 hover:bg-slate-700/50"
+                      className="border-slate-600/50 text-slate-300 hover:bg-slate-700/50 flex items-center justify-center"
                     >
-                      <PencilIcon className="h-4 w-4 mr-2" />
+                      <PencilIcon className="h-4 w-4 mr-2 mx-auto" />
                       Edit
                     </Button>
                     <Button
@@ -497,10 +497,10 @@ const JobDescriptionManager: React.FC<JobDescriptionManagerProps> = () => {
                       variant="outline"
                       onClick={() => handleDelete(jobId)}
                       disabled={!jobId}
-                      className="border-red-500/50 text-red-400 hover:bg-red-500/10"
+                      className="border-red-500/50 text-red-400 hover:bg-red-500/10 flex items-center justify-center"
                     >
-                      <TrashIcon className="h-4 w-4 mr-2" />
-                      Delete
+                      <TrashIcon className="h-4 w-4 mx-auto" />
+                      <span className="sr-only">Delete</span>
                     </Button>
                   </div>
                 </div>

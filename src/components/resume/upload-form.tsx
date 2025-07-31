@@ -169,25 +169,33 @@ const UploadForm: React.FC<UploadFormProps> = ({ onUploadSuccess }) => {
               type="button"
               variant={uploadMethod === 'file' ? 'primary' : 'outline'}
               onClick={() => setUploadMethod('file')}
-              className={uploadMethod === 'file' 
-                ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white' 
-                : 'border-slate-600/50 text-slate-300 hover:bg-slate-700/50'
+              className={
+                (uploadMethod === 'file' 
+                  ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white' 
+                  : 'border-slate-600/50 text-slate-300 hover:bg-slate-700/50'
+                ) + ' flex items-center justify-center'
               }
             >
-              <DocumentTextIcon className="h-4 w-4 mr-2" />
-              Upload File
+              <span className="flex items-center justify-center w-full">
+                <DocumentTextIcon className="h-4 w-4 mr-2" />
+                Upload File
+              </span>
             </Button>
             <Button
               type="button"
               variant={uploadMethod === 'text' ? 'primary' : 'outline'}
               onClick={() => setUploadMethod('text')}
-              className={uploadMethod === 'text' 
+              className={
+              (uploadMethod === 'text' 
                 ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white' 
                 : 'border-slate-600/50 text-slate-300 hover:bg-slate-700/50'
+              ) + ' flex items-center justify-center'
               }
             >
+              <span className="flex items-center justify-center w-full">
               <DocumentTextIcon className="h-4 w-4 mr-2" />
               Paste Text
+              </span>
             </Button>
           </div>
         </div>

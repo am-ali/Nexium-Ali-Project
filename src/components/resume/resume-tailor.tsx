@@ -380,19 +380,19 @@ const ResumeTailor: React.FC<ResumeTailorProps> = () => {
         <Button
           variant="outline"
           onClick={() => router.push('/dashboard/jobs')}
-          className="border-slate-600/50 text-slate-300 hover:bg-slate-700/50"
+          className="border-slate-600/50 text-slate-300 hover:bg-slate-700/50 flex flex-col items-center justify-center"
         >
-          <BriefcaseIcon className="h-4 w-4 mr-2" />
-          Manage Jobs
+          <BriefcaseIcon className="h-6 w-6 mb-1" />
+          <span>Manage Jobs</span>
         </Button>
         
         <Button
           variant="outline"
           onClick={() => router.push('/dashboard/upload')}
-          className="border-slate-600/50 text-slate-300 hover:bg-slate-700/50"
+          className="border-slate-600/50 text-slate-300 hover:bg-slate-700/50 flex flex-col items-center justify-center"
         >
-          <DocumentTextIcon className="h-4 w-4 mr-2" />
-          Upload Resume
+          <DocumentTextIcon className="h-6 w-6 mb-1" />
+          <span>Upload Resume</span>
         </Button>
       </div>
 

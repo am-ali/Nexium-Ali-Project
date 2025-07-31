@@ -20,7 +20,6 @@ export default async function TailorPage() {
 
   return (
     <div className="max-w-6xl mx-auto py-8">
-      <h1 className="text-2xl font-bold mb-6">Tailor Your Resume</h1>
       <Suspense 
         fallback={
           <div className="animate-pulse space-y-4">

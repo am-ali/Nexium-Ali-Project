@@ -201,10 +201,10 @@ export default function ResumesPage() {
         </div>
         
         <Link href="/dashboard/upload">
-          <Button className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600">
-            <PlusIcon className="h-4 w-4 mr-2" />
-            Upload Resume
-          </Button>
+            <Button className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 flex flex-col items-center justify-center">
+              <PlusIcon className="h-6 w-6 mb-1" />
+              <span>Upload Resume</span>
+            </Button>
         </Link>
       </div>
 
@@ -305,16 +305,19 @@ export default function ResumesPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/dashboard/upload">
-              <Button className="bg-gradient-to-r from-purple-500 to-blue-500">
-                <PlusIcon className="h-4 w-4 mr-2" />
-                Upload Resume
-              </Button>
+                <Button className="bg-gradient-to-r from-purple-500 to-blue-500 flex flex-col items-center justify-center">
+                <PlusIcon className="h-6 w-6 mb-1" />
+                <span>Upload Resume</span>
+                </Button>
             </Link>
             <Link href="/dashboard/tailor">
-              <Button variant="outline" className="border-slate-600/50 text-slate-300 hover:bg-slate-700/50">
-                <SparklesIcon className="h-4 w-4 mr-2" />
-                Tailor Resume
-              </Button>
+                <Button
+                variant="outline"
+                className="border-slate-600/50 text-slate-300 hover:bg-slate-700/50 flex flex-col items-center justify-center"
+                >
+                <SparklesIcon className="h-6 w-6 mb-1" />
+                <span>Tailor Resume</span>
+                </Button>
             </Link>
           </div>
         </Card>

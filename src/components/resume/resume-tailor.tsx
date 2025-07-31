@@ -175,13 +175,13 @@ const ResumeTailor: React.FC<ResumeTailorProps> = () => {
               <DocumentTextIcon className="h-16 w-16 mx-auto mb-4 text-slate-600" />
               <p className="text-lg mb-2">No original resumes found</p>
               <p className="text-sm text-slate-500 mb-4">Upload your first resume to get started</p>
-              <Button 
+                <Button 
                 onClick={() => router.push('/dashboard/upload')}
-                className="bg-gradient-to-r from-blue-500 to-blue-600"
-              >
+                className="bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center mx-auto"
+                >
                 <PlusIcon className="h-4 w-4 mr-2" />
                 Upload Resume
-              </Button>
+                </Button>
             </div>
           ) : (
             <div className="space-y-3 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800">
@@ -248,13 +248,13 @@ const ResumeTailor: React.FC<ResumeTailorProps> = () => {
               <BriefcaseIcon className="h-16 w-16 mx-auto mb-4 text-slate-600" />
               <p className="text-lg mb-2">No job descriptions found</p>
               <p className="text-sm text-slate-500 mb-4">Add your first target job</p>
-              <Button 
+                <Button 
                 onClick={() => router.push('/dashboard/jobs')}
-                className="bg-gradient-to-r from-purple-500 to-purple-600"
-              >
+                className="bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center mx-auto"
+                >
                 <PlusIcon className="h-4 w-4 mr-2" />
                 Add Job Description
-              </Button>
+                </Button>
             </div>
           ) : (
             <div className="space-y-3 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800">

@@ -188,21 +188,21 @@ export const ResumeHistory: React.FC = () => {
               }
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
-              <Button 
+                <Button 
                 onClick={() => window.location.href = '/dashboard/upload'}
-                className="bg-gradient-to-r from-blue-500 to-blue-600"
-              >
-                <DocumentTextIcon className="h-4 w-4 mr-2" />
+                className="bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center"
+                >
+                <DocumentTextIcon className="h-4 w-4 mr-2 mx-auto" />
                 Upload Resume
-              </Button>
-              <Button 
+                </Button>
+                <Button 
                 onClick={() => window.location.href = '/dashboard/tailor'}
                 variant="outline"
-                className="border-slate-600/50 text-slate-300 hover:bg-slate-700/50"
-              >
-                <SparklesIcon className="h-4 w-4 mr-2" />
-                Tailor Resume
-              </Button>
+                className="border-slate-600/50 text-slate-300 hover:bg-slate-700/50 flex flex-col items-center justify-center"
+                >
+                <SparklesIcon className="h-6 w-6 mb-1 mx-auto" />
+                <span>Tailor Resume</span>
+                </Button>
             </div>
           </div>
         </Card>

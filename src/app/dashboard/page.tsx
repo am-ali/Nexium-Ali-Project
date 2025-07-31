@@ -257,9 +257,12 @@ export default function DashboardPage(): JSX.Element {
                   <p className="text-lg mb-2">No resumes yet</p>
                   <p className="text-sm text-slate-500 mb-4">Upload your first resume to get started</p>
                   <Link href="/dashboard/upload">
-                    <Button size="sm" className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700">
-                      <PlusIcon className="h-4 w-4 mr-2" />
-                      Upload First Resume
+                    <Button
+                      size="sm"
+                      className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 flex flex-col items-center justify-center"
+                    >
+                      <PlusIcon className="h-6 w-6 mb-1 mx-auto" />
+                      <span>Upload First Resume</span>
                     </Button>
                   </Link>
                 </div>
@@ -301,9 +304,12 @@ export default function DashboardPage(): JSX.Element {
                   <p className="text-lg mb-2">No job descriptions yet</p>
                   <p className="text-sm text-slate-500 mb-4">Add your first target job</p>
                   <Link href="/dashboard/jobs">
-                    <Button size="sm" className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700">
-                      <PlusIcon className="h-4 w-4 mr-2" />
-                      Add First Job
+                    <Button
+                      size="sm"
+                      className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 flex flex-col items-center justify-center"
+                    >
+                      <PlusIcon className="h-6 w-6 mb-1 mx-auto" />
+                      <span>Add First Job</span>
                     </Button>
                   </Link>
                 </div>

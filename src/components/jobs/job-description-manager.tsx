@@ -416,9 +416,9 @@ const JobDescriptionManager: React.FC<JobDescriptionManagerProps> = () => {
             </p>
             <Button 
               onClick={() => setShowForm(true)}
-              className="bg-gradient-to-r from-purple-500 to-blue-500"
+              className="bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center mx-auto"
             >
-              <PlusIcon className="h-4 w-4 mr-2" />
+              <PlusIcon className="h-4 w-4 mr-2 mx-auto" />
               Add Your First Job
             </Button>
           </Card>

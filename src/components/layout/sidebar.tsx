@@ -95,7 +95,7 @@ export function Sidebar() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-white truncate">
-                    {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Muhammad Ali'}
+                    {user?.user_metadata?.full_name || user?.email?.split('@')[0]}
                   </p>
                 <p className="text-xs text-slate-400">Premium User</p>
               </div>

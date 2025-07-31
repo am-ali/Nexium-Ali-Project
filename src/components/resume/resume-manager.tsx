@@ -255,16 +255,14 @@ const ResumeManager: React.FC<ResumeManagerProps> = () => {
                   </div>
                   
                   <div className="flex items-center space-x-2">
-                    <Link href={`/dashboard/preview/${resumeId}`}>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-slate-600/50 text-slate-300 hover:bg-slate-700/50 hover:text-white flex items-center gap-1"
-                      >
-                        <EyeIcon className="h-4 w-4" style={{ verticalAlign: 'middle' }} />
-                        <span className="inline-flex items-center h-4">View</span>
-                      </Button>
-                    </Link>
+                    <Button
+                    variant="outline"
+                    onClick={() => router.push('/dashboard/preview/${resumeId}')}
+                    className="border-slate-600/50 text-slate-300 hover:bg-slate-700/50 hover:text-white flex items-center gap-1"
+                    >
+                    <EyeIcon className="h-4 w-4" />
+                    <span>View</span>
+                    </Button>
                     
                     <Button
                       variant="outline"

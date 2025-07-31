@@ -59,8 +59,8 @@ export async function middleware(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {
-      console.log('No user found, redirecting to auth')
-      return NextResponse.redirect(new URL('/auth', request.url))
+      console.log('No user found, redirecting to homepage')
+      return NextResponse.redirect(new URL('/', request.url))
     }
 
     // CRITICAL: Check if email is confirmed

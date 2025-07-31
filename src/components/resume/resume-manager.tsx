@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -20,6 +21,7 @@ import { formatDistanceToNow } from 'date-fns';
 interface ResumeManagerProps {}
 
 const ResumeManager: React.FC<ResumeManagerProps> = () => {
+  const router = useRouter();
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedResumes, setSelectedResumes] = useState<string[]>([]);

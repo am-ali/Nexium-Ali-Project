@@ -13,15 +13,7 @@ import {
   FolderIcon,
   UserCircleIcon
 } from '@heroicons/react/24/outline';
-useEffect(() => {
-  // Assuming the Supabase client creates a session or user object
-  const fetchUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    setUser(user);
-  };
   
-  fetchUser();
- }, []);
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
@@ -36,6 +28,14 @@ export function Sidebar() {
   const supabase = createClient();
   const [user, setUser] = useState<any>(null);
   const pathname = usePathname();
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+  }, [supabase]);
 
   return (
     <div className="w-64 bg-slate-900/95 backdrop-blur-xl border-r border-slate-700/50 h-full relative flex flex-col">

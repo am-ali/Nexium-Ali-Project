@@ -13,7 +13,8 @@ import {
   EyeIcon,
   ArrowDownTrayIcon,
   CalendarIcon,
-  DocumentDuplicateIcon
+  DocumentDuplicateIcon,
+  PlusIcon
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
@@ -165,8 +166,8 @@ const ResumeManager: React.FC<ResumeManagerProps> = () => {
               size="sm"
               className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
             >
-              <DocumentTextIcon className="h-4 w-4 mr-1" />
-              Upload New Resume
+              <PlusIcon className="h-4 w-4 mr-2" />
+              Upload Resume
             </Button>
           </Link>
         </div>
@@ -203,13 +204,13 @@ const ResumeManager: React.FC<ResumeManagerProps> = () => {
           </p>
           <Link href="/dashboard/upload">
             <Button className="bg-gradient-to-r from-purple-500 to-blue-500">
-              <DocumentTextIcon className="h-4 w-4 mr-2" />
+              <PlusIcon className="h-4 w-4 mr-2" />
               Upload Resume
             </Button>
           </Link>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {resumes.map((resume) => {
             const resumeId = getResumeId(resume);
             const isSelected = selectedResumes.includes(resumeId);
@@ -217,101 +218,91 @@ const ResumeManager: React.FC<ResumeManagerProps> = () => {
             return (
               <Card 
                 key={resumeId} 
-                className={`p-4 transition-all bg-slate-800/50 border-slate-700/50 hover:bg-slate-800/70 ${
+                className={`p-5 transition-all bg-slate-800/50 border-slate-700/50 hover:bg-slate-800/70 ${
                   isSelected ? 'ring-2 ring-purple-500 bg-purple-500/10' : ''
                 }`}
               >
-                <div className="flex items-center gap-4">
-                  {/* Checkbox */}
-                  <div className="flex-shrink-0">
+                {/* Top Row: Checkbox, Icon, Title, Actions */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-4">
                     <input
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => handleSelectResume(resumeId)}
                       className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-purple-500 focus:ring-purple-500 focus:ring-offset-slate-800"
                     />
-                  </div>
-                  
-                  {/* Icon */}
-                  <div className="flex-shrink-0">
-                    <div className="w-12 h-12 bg-blue-500/20 rounded-lg border border-blue-500/30 flex items-center justify-center">
-                      <DocumentTextIcon className="h-6 w-6 text-blue-400" />
+                    
+                    <div className="w-10 h-10 bg-blue-500/20 rounded-lg border border-blue-500/30 flex items-center justify-center">
+                      <DocumentTextIcon className="h-5 w-5 text-blue-400" />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-semibold text-white truncate">
+                        {resume.title || 'Untitled Resume'}
+                      </h3>
                     </div>
                   </div>
                   
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold text-white truncate mb-1">
-                      {resume.title || 'Untitled Resume'}
-                    </h3>
-                    <div className="flex flex-wrap items-center gap-3 text-sm text-slate-400">
-                      <div className="flex items-center gap-1">
-                        <CalendarIcon className="h-4 w-4" />
-                        <span>{resume.createdAt ? formatDistanceToNow(new Date(resume.createdAt), { addSuffix: true }) : 'Unknown date'}</span>
-                      </div>
-                      {resume.fileName && (
-                        <div className="flex items-center gap-1">
-                          <DocumentDuplicateIcon className="h-4 w-4" />
-                          <span className="truncate max-w-40">{resume.fileName}</span>
-                        </div>
-                      )}
-                      <span className="px-2 py-1 bg-slate-700/50 rounded text-xs text-slate-300">
-                        {resume.status || 'Active'}
-                      </span>
-                    </div>
+                  {/* Action Buttons */}
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => router.push(`/dashboard/preview/${resumeId}`)}
+                      className="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-slate-300 bg-slate-700/50 border border-slate-600/50 rounded-md hover:bg-slate-700 hover:text-white transition-colors"
+                    >
+                      <EyeIcon className="h-4 w-4 mr-1.5" />
+                      View
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        const element = document.createElement('a');
+                        const file = new Blob([resume.content || resume.originalContent || ''], { type: 'text/plain' });
+                        element.href = URL.createObjectURL(file);
+                        element.download = `${resume.title || 'resume'}.txt`;
+                        document.body.appendChild(element);
+                        element.click();
+                        document.body.removeChild(element);
+                      }}
+                      className="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-slate-300 bg-slate-700/50 border border-slate-600/50 rounded-md hover:bg-slate-700 hover:text-white transition-colors"
+                    >
+                      <ArrowDownTrayIcon className="h-4 w-4 mr-1.5" />
+                      Download
+                    </button>
+                    
+                    <button
+                      onClick={() => router.push(`/dashboard/tailor?resumeId=${resumeId}`)}
+                      className="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-purple-400 bg-purple-500/10 border border-purple-500/50 rounded-md hover:bg-purple-500/20 hover:text-purple-300 transition-colors"
+                    >
+                      <PencilIcon className="h-4 w-4 mr-1.5" />
+                      Tailor
+                    </button>
+                    
+                    <button
+                      onClick={() => handleDelete(resumeId)}
+                      className="inline-flex items-center justify-center w-8 h-8 text-red-400 bg-red-500/10 border border-red-500/50 rounded-md hover:bg-red-500/20 hover:text-red-300 transition-colors"
+                    >
+                      <TrashIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Bottom Row: Metadata */}
+                <div className="flex flex-wrap items-center gap-4 text-sm text-slate-400 pl-8">
+                  <div className="flex items-center gap-1.5">
+                    <CalendarIcon className="h-4 w-4" />
+                    <span>{resume.createdAt ? formatDistanceToNow(new Date(resume.createdAt), { addSuffix: true }) : 'Unknown date'}</span>
                   </div>
                   
-                  {/* Actions */}
-                  <div className="flex-shrink-0">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => router.push(`/dashboard/preview/${resumeId}`)}
-                        className="h-8 px-3 border-slate-600/50 text-slate-300 hover:bg-slate-700/50 hover:text-white"
-                      >
-                        <EyeIcon className="h-4 w-4 mr-1.5" />
-                        View
-                      </Button>
-                      
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          const element = document.createElement('a');
-                          const file = new Blob([resume.content || resume.originalContent || ''], { type: 'text/plain' });
-                          element.href = URL.createObjectURL(file);
-                          element.download = `${resume.title || 'resume'}.txt`;
-                          document.body.appendChild(element);
-                          element.click();
-                          document.body.removeChild(element);
-                        }}
-                        className="h-8 px-3 border-slate-600/50 text-slate-300 hover:bg-slate-700/50 hover:text-white"
-                      >
-                        <ArrowDownTrayIcon className="h-4 w-4 mr-1.5" />
-                        Download
-                      </Button>
-                      
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => router.push(`/dashboard/tailor?resumeId=${resumeId}`)}
-                        className="h-8 px-3 border-purple-500/50 text-purple-400 hover:bg-purple-500/10 hover:text-purple-300"
-                      >
-                        <PencilIcon className="h-4 w-4 mr-1.5" />
-                        Tailor
-                      </Button>
-                      
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDelete(resumeId)}
-                        className="h-8 w-8 p-0 border-red-500/50 text-red-400 hover:bg-red-500/10 hover:text-red-300 flex items-center justify-center"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </Button>
+                  {resume.fileName && (
+                    <div className="flex items-center gap-1.5">
+                      <DocumentDuplicateIcon className="h-4 w-4" />
+                      <span className="truncate max-w-48">{resume.fileName}</span>
                     </div>
-                  </div>
+                  )}
+                  
+                  <span className="px-2 py-1 bg-slate-700/50 rounded text-xs text-slate-300">
+                    {resume.status || 'Active'}
+                  </span>
                 </div>
               </Card>
             );

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -60,7 +60,7 @@ const ResumeManager: React.FC<ResumeManagerProps> = () => {
       }
 
       toast.success('Resume deleted successfully');
-      fetchResumes(); // Refresh the list
+      fetchResumes();
     } catch (error) {
       console.error('Error deleting resume:', error);
       toast.error('Failed to delete resume');
@@ -217,93 +217,100 @@ const ResumeManager: React.FC<ResumeManagerProps> = () => {
             return (
               <Card 
                 key={resumeId} 
-                className={`p-6 transition-all bg-slate-800/50 border-slate-700/50 hover:bg-slate-800/70 ${
+                className={`p-4 transition-all bg-slate-800/50 border-slate-700/50 hover:bg-slate-800/70 ${
                   isSelected ? 'ring-2 ring-purple-500 bg-purple-500/10' : ''
                 }`}
               >
-                <div className="flex items-center space-x-4">
-                  <label className="cursor-pointer">
+                <div className="flex items-center gap-4">
+                  {/* Checkbox */}
+                  <div className="flex-shrink-0">
                     <input
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => handleSelectResume(resumeId)}
-                      className="rounded border-slate-600 bg-slate-700 text-purple-500 focus:ring-purple-500 focus:ring-offset-slate-800"
+                      className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-purple-500 focus:ring-purple-500 focus:ring-offset-slate-800"
                     />
-                  </label>
-                  
-                  <div className="p-3 bg-blue-500/20 rounded-lg border border-blue-500/30">
-                    <DocumentTextIcon className="h-6 w-6 text-blue-400" />
                   </div>
                   
+                  {/* Icon */}
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 bg-blue-500/20 rounded-lg border border-blue-500/30 flex items-center justify-center">
+                      <DocumentTextIcon className="h-6 w-6 text-blue-400" />
+                    </div>
+                  </div>
+                  
+                  {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-medium text-white truncate">
+                    <h3 className="text-lg font-semibold text-white truncate mb-1">
                       {resume.title || 'Untitled Resume'}
                     </h3>
-                    <div className="flex items-center space-x-4 mt-1 text-sm text-slate-400">
-                      <span className="flex items-center">
-                        <CalendarIcon className="h-4 w-4 mr-1" />
-                        {resume.createdAt ? formatDistanceToNow(new Date(resume.createdAt), { addSuffix: true }) : 'Unknown date'}
-                      </span>
+                    <div className="flex flex-wrap items-center gap-3 text-sm text-slate-400">
+                      <div className="flex items-center gap-1">
+                        <CalendarIcon className="h-4 w-4" />
+                        <span>{resume.createdAt ? formatDistanceToNow(new Date(resume.createdAt), { addSuffix: true }) : 'Unknown date'}</span>
+                      </div>
                       {resume.fileName && (
-                        <span className="flex items-center">
-                          <DocumentDuplicateIcon className="h-4 w-4 mr-1" />
-                          {resume.fileName}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          <DocumentDuplicateIcon className="h-4 w-4" />
+                          <span className="truncate max-w-40">{resume.fileName}</span>
+                        </div>
                       )}
-                      <span className="px-2 py-1 bg-slate-700/50 rounded-md text-xs text-slate-300">
+                      <span className="px-2 py-1 bg-slate-700/50 rounded text-xs text-slate-300">
                         {resume.status || 'Active'}
                       </span>
                     </div>
                   </div>
                   
-                  <div className="flex items-center space-x-2">
-                    <Button
-                    variant="outline"
-                    onClick={() => router.push('/dashboard/preview/${resumeId}')}
-                    className="border-slate-600/50 text-slate-300 hover:bg-slate-700/50 hover:text-white flex items-center gap-1"
-                    >
-                    <EyeIcon className="h-4 w-4" />
-                    <span>View</span>
-                    </Button>
-                    
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        // Download functionality
-                        const element = document.createElement('a');
-                        const file = new Blob([resume.content || resume.originalContent || ''], { type: 'text/plain' });
-                        element.href = URL.createObjectURL(file);
-                        element.download = `${resume.title || 'resume'}.txt`;
-                        document.body.appendChild(element);
-                        element.click();
-                        document.body.removeChild(element);
-                      }}
-                      className="border-slate-600/50 text-slate-300 hover:bg-slate-700/50 hover:text-white flex items-center"
-                    >
-                      <ArrowDownTrayIcon className="h-4 w-4 mr-1" />
-                      <span>Download</span>
-                    </Button>
-                    
-                    <Link href={`/dashboard/tailor?resumeId=${resumeId}`}>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="border-purple-500/50 text-purple-400 hover:bg-purple-500/10 hover:text-purple-300 flex items-center"
+                  {/* Actions */}
+                  <div className="flex-shrink-0">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => router.push(`/dashboard/preview/${resumeId}`)}
+                        className="h-8 px-3 border-slate-600/50 text-slate-300 hover:bg-slate-700/50 hover:text-white"
                       >
-                        <PencilIcon className="h-4 w-4 mr-1" />
-                        <span>Tailor</span>
+                        <EyeIcon className="h-4 w-4 mr-1.5" />
+                        View
                       </Button>
-                    </Link>
-                    
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(resumeId)}
-                      className="border-red-500/50 text-red-400 hover:bg-red-500/10 hover:text-red-300 flex items-center"
-                    >
-                      <TrashIcon className="h-4 w-4" />
-                    </Button>
+                      
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const element = document.createElement('a');
+                          const file = new Blob([resume.content || resume.originalContent || ''], { type: 'text/plain' });
+                          element.href = URL.createObjectURL(file);
+                          element.download = `${resume.title || 'resume'}.txt`;
+                          document.body.appendChild(element);
+                          element.click();
+                          document.body.removeChild(element);
+                        }}
+                        className="h-8 px-3 border-slate-600/50 text-slate-300 hover:bg-slate-700/50 hover:text-white"
+                      >
+                        <ArrowDownTrayIcon className="h-4 w-4 mr-1.5" />
+                        Download
+                      </Button>
+                      
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => router.push(`/dashboard/tailor?resumeId=${resumeId}`)}
+                        className="h-8 px-3 border-purple-500/50 text-purple-400 hover:bg-purple-500/10 hover:text-purple-300"
+                      >
+                        <PencilIcon className="h-4 w-4 mr-1.5" />
+                        Tailor
+                      </Button>
+                      
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDelete(resumeId)}
+                        className="h-8 w-8 p-0 border-red-500/50 text-red-400 hover:bg-red-500/10 hover:text-red-300 flex items-center justify-center"
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </Card>

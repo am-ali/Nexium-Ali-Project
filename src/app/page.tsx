@@ -111,9 +111,6 @@ export default function HomePage() {
                         <p className="text-xs text-slate-500">
                             By continuing, you agree to receive emails and verify your email address.
                         </p>
-                        <p className="text-xs text-red-400 mt-2 font-medium">
-                            ⚠️ You must verify your email to access the dashboard
-                        </p>
                     </div>
                 </div>
             </div>

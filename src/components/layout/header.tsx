@@ -36,7 +36,8 @@ export function Header() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    router.push('/auth');
+    // Redirect to homepage instead of /auth
+    router.push('/');
   };
 
   const getPageTitle = () => {

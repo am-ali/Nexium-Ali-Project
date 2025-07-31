@@ -48,7 +48,6 @@ export default function ResumesPage() {
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'original' | 'tailored'>('all');
-  const [selectedResumes, setSelectedResumes] = useState<string[]>([]);
 
   useEffect(() => {
     fetchResumes();
@@ -152,22 +151,6 @@ export default function ResumesPage() {
     }
   };
 
-  const handleSelectResume = (resumeId: string): void => {
-    setSelectedResumes(prev => 
-      prev.includes(resumeId) 
-        ? prev.filter(id => id !== resumeId)
-        : [...prev, resumeId]
-    );
-  };
-
-  const handleSelectAll = (): void => {
-    if (selectedResumes.length === resumes.length) {
-      setSelectedResumes([]);
-    } else {
-      setSelectedResumes(resumes.map(resume => resume._id || resume.id || ''));
-    }
-  };
-
   const getResumeId = (resume: Resume): string => {
     return resume._id || resume.id || '';
   };
@@ -184,6 +167,13 @@ export default function ResumesPage() {
     return 'text-red-400';
   };
 
+  const getMatchScoreBg = (score?: number) => {
+    if (!score || isNaN(score)) return 'bg-slate-500/10 border-slate-500/20';
+    if (score >= 80) return 'bg-green-500/10 border-green-500/20';
+    if (score >= 60) return 'bg-yellow-500/10 border-yellow-500/20';
+    return 'bg-red-500/10 border-red-500/20';
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -191,7 +181,7 @@ export default function ResumesPage() {
           <div className="h-8 bg-slate-700/50 rounded w-1/3 mb-6"></div>
           <div className="space-y-4">
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="h-24 bg-slate-800/50 rounded-xl border border-slate-700/50"></div>
+              <div key={i} className="h-32 bg-slate-800/50 rounded-xl border border-slate-700/50"></div>
             ))}
           </div>
         </div>
@@ -203,18 +193,11 @@ export default function ResumesPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center space-x-4">
-          <div>
-            <h1 className="text-3xl font-bold text-white">My Resumes</h1>
-            <p className="text-slate-400 mt-1">
-              Manage your original and AI-tailored resumes
-            </p>
-          </div>
-          {selectedResumes.length > 0 && (
-            <span className="text-sm text-slate-400">
-              {selectedResumes.length} selected
-            </span>
-          )}
+        <div>
+          <h1 className="text-3xl font-bold text-white">My Resumes</h1>
+          <p className="text-slate-400 mt-1">
+            Manage your original and AI-tailored resumes ({resumes.length} total)
+          </p>
         </div>
         
         <Link href="/dashboard/upload">
@@ -237,8 +220,8 @@ export default function ResumesPage() {
             onClick={() => setFilter(key as any)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               filter === key
-                ? 'bg-purple-500 text-white'
-                : 'bg-slate-800/50 text-slate-300 hover:bg-slate-700/50'
+                ? 'bg-purple-500 text-white shadow-lg'
+                : 'bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 border border-slate-700/50'
             }`}
           >
             {label} ({count})
@@ -248,46 +231,54 @@ export default function ResumesPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4 bg-slate-800/50 border-slate-700/50">
+        <Card className="p-4 bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20">
           <div className="flex items-center space-x-3">
-            <DocumentTextIcon className="h-8 w-8 text-blue-400" />
+            <div className="p-2 bg-blue-500/20 rounded-lg">
+              <DocumentTextIcon className="h-6 w-6 text-blue-400" />
+            </div>
             <div>
               <p className="text-sm text-slate-400">Total Resumes</p>
-              <p className="text-xl font-bold text-white">{resumes.length}</p>
+              <p className="text-2xl font-bold text-white">{resumes.length}</p>
             </div>
           </div>
         </Card>
         
-        <Card className="p-4 bg-slate-800/50 border-slate-700/50">
+        <Card className="p-4 bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20">
           <div className="flex items-center space-x-3">
-            <SparklesIcon className="h-8 w-8 text-purple-400" />
+            <div className="p-2 bg-purple-500/20 rounded-lg">
+              <SparklesIcon className="h-6 w-6 text-purple-400" />
+            </div>
             <div>
               <p className="text-sm text-slate-400">AI-Tailored</p>
-              <p className="text-xl font-bold text-white">
+              <p className="text-2xl font-bold text-white">
                 {resumes.filter(r => r.type === 'tailored').length}
               </p>
             </div>
           </div>
         </Card>
         
-        <Card className="p-4 bg-slate-800/50 border-slate-700/50">
+        <Card className="p-4 bg-gradient-to-br from-yellow-500/10 to-yellow-600/5 border-yellow-500/20">
           <div className="flex items-center space-x-3">
-            <TrophyIcon className="h-8 w-8 text-yellow-400" />
+            <div className="p-2 bg-yellow-500/20 rounded-lg">
+              <TrophyIcon className="h-6 w-6 text-yellow-400" />
+            </div>
             <div>
               <p className="text-sm text-slate-400">Avg Match Score</p>
-              <p className="text-xl font-bold text-white">
+              <p className="text-2xl font-bold text-white">
                 {calculateAverageMatchScore()}%
               </p>
             </div>
           </div>
         </Card>
         
-        <Card className="p-4 bg-slate-800/50 border-slate-700/50">
+        <Card className="p-4 bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/20">
           <div className="flex items-center space-x-3">
-            <ClockIcon className="h-8 w-8 text-green-400" />
+            <div className="p-2 bg-green-500/20 rounded-lg">
+              <ClockIcon className="h-6 w-6 text-green-400" />
+            </div>
             <div>
               <p className="text-sm text-slate-400">This Week</p>
-              <p className="text-xl font-bold text-white">
+              <p className="text-2xl font-bold text-white">
                 {getThisWeekCount()}
               </p>
             </div>
@@ -295,45 +286,26 @@ export default function ResumesPage() {
         </Card>
       </div>
 
-      {/* Bulk Actions */}
-      {resumes.length > 0 && (
-        <div className="flex items-center space-x-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
-          <label className="flex items-center space-x-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={selectedResumes.length === resumes.length}
-              onChange={handleSelectAll}
-              className="rounded border-slate-600 bg-slate-700 text-purple-500 focus:ring-purple-500 focus:ring-offset-slate-800"
-            />
-            <span className="text-sm text-slate-300">Select all</span>
-          </label>
-          
-          {selectedResumes.length > 0 && (
-            <span className="text-sm text-slate-400">
-              {selectedResumes.length} of {resumes.length} selected
-            </span>
-          )}
-        </div>
-      )}
-
       {/* Resume List */}
       {filteredResumes.length === 0 ? (
-        <Card className="p-12 text-center bg-slate-800/50 border-slate-700/50">
-          <DocumentTextIcon className="h-16 w-16 mx-auto mb-4 text-slate-600" />
+        <Card className="p-12 text-center bg-slate-800/30 border-slate-700/50">
+          <div className="w-20 h-20 mx-auto mb-6 bg-slate-700/50 rounded-2xl flex items-center justify-center">
+            <DocumentTextIcon className="h-10 w-10 text-slate-500" />
+          </div>
           <h3 className="text-xl font-semibold text-white mb-2">
             {filter === 'all' ? 'No resumes found' : `No ${filter} resumes found`}
           </h3>
-          <p className="text-slate-400 mb-6">
+          <p className="text-slate-400 mb-8 max-w-md mx-auto">
             {filter === 'original' 
-              ? 'Upload your first resume to get started'
+              ? 'Upload your first resume to get started with AI-powered resume tailoring.'
               : filter === 'tailored'
-              ? 'Tailor your first resume for a job'
-              : 'Upload a resume or tailor an existing one'
+              ? 'Tailor your first resume for a specific job to see it here.'
+              : 'Upload a resume or tailor an existing one to get started.'
             }
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/dashboard/upload">
-              <Button>
+              <Button className="bg-gradient-to-r from-purple-500 to-blue-500">
                 <PlusIcon className="h-4 w-4 mr-2" />
                 Upload Resume
               </Button>
@@ -347,146 +319,144 @@ export default function ResumesPage() {
           </div>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {filteredResumes.map((resume) => {
             const resumeId = getResumeId(resume);
-            const isSelected = selectedResumes.includes(resumeId);
             
             return (
               <Card 
                 key={resumeId} 
-                className={`p-5 transition-all bg-slate-800/50 border-slate-700/50 hover:bg-slate-800/70 ${
-                  isSelected ? 'ring-2 ring-purple-500 bg-purple-500/10' : ''
-                }`}
+                className="group p-6 transition-all duration-200 bg-slate-800/50 border-slate-700/50 hover:bg-slate-800/70 hover:border-slate-600/50 hover:shadow-xl hover:shadow-black/20"
               >
-                {/* Top Row: Checkbox, Icon, Title, Type, Actions */}
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-4">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => handleSelectResume(resumeId)}
-                      className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-purple-500 focus:ring-purple-500 focus:ring-offset-slate-800"
-                    />
-                    
-                    <div className={`w-10 h-10 rounded-lg border flex items-center justify-center ${
+                <div className="flex items-start justify-between">
+                  {/* Left Section: Icon, Title, Meta */}
+                  <div className="flex items-start space-x-4 flex-1">
+                    {/* Icon */}
+                    <div className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center flex-shrink-0 ${
                       resume.type === 'original' 
                         ? 'bg-blue-500/20 border-blue-500/30' 
                         : 'bg-purple-500/20 border-purple-500/30'
                     }`}>
                       {resume.type === 'original' ? (
-                        <DocumentTextIcon className="h-5 w-5 text-blue-400" />
+                        <DocumentTextIcon className="h-6 w-6 text-blue-400" />
                       ) : (
-                        <SparklesIcon className="h-5 w-5 text-purple-400" />
+                        <SparklesIcon className="h-6 w-6 text-purple-400" />
                       )}
                     </div>
                     
+                    {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-semibold text-white truncate">
-                        {resume.title || 'Untitled Resume'}
-                      </h3>
-                      <p className="text-sm text-slate-400">
-                        {resume.type === 'original' ? 'Original Resume' : 'AI-Tailored'}
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-xl font-semibold text-white truncate">
+                          {resume.title || 'Untitled Resume'}
+                        </h3>
+                        
+                        {/* Type Badge */}
+                        <span className={`px-2 py-1 rounded-md text-xs font-medium ${
+                          resume.type === 'original' 
+                            ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' 
+                            : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                        }`}>
+                          {resume.type === 'original' ? 'Original' : 'AI-Tailored'}
+                        </span>
+                        
+                        {/* Match Score Badge */}
                         {resume.matchScore && !isNaN(resume.matchScore) && (
-                          <span className={`ml-2 font-medium ${getMatchScoreColor(resume.matchScore)}`}>
-                            • {resume.matchScore}% match
+                          <span className={`px-2 py-1 rounded-md text-xs font-medium border ${getMatchScoreBg(resume.matchScore)} ${getMatchScoreColor(resume.matchScore)}`}>
+                            {resume.matchScore}% match
                           </span>
                         )}
-                      </p>
+                      </div>
+                      
+                      {/* Metadata */}
+                      <div className="flex flex-wrap items-center gap-4 text-sm text-slate-400 mb-3">
+                        <div className="flex items-center gap-1.5">
+                          <CalendarIcon className="h-4 w-4" />
+                          <span>{formatDate(resume.createdAt)}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-1.5">
+                          <DocumentDuplicateIcon className="h-4 w-4" />
+                          <span className="truncate max-w-40">{resume.fileName || 'Text input'}</span>
+                        </div>
+                      </div>
+                      
+                      {/* Job Info for Tailored Resumes */}
+                      {resume.type === 'tailored' && (resume.jobTitle || resume.company) && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <BriefcaseIcon className="h-4 w-4 text-slate-500" />
+                          <span className="text-slate-300">
+                            {resume.jobTitle}
+                            {resume.company && <span className="text-slate-400"> at {resume.company}</span>}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {/* Tailored Versions for Original Resumes */}
+                      {resume.type === 'original' && resume.tailoredVersions && resume.tailoredVersions.length > 0 && (
+                        <div className="mt-3">
+                          <p className="text-xs text-slate-400 mb-2 flex items-center">
+                            <SparklesIcon className="h-3 w-3 mr-1" />
+                            {resume.tailoredVersions.length} tailored version(s)
+                          </p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {resume.tailoredVersions.slice(0, 2).map((version, index) => (
+                              <div key={index} className="flex items-center justify-between text-xs bg-slate-700/30 rounded-lg px-3 py-2 border border-slate-600/30">
+                                <span className="text-slate-300 truncate flex-1 mr-2">{version.jobTitle}</span>
+                                <span className={`font-medium flex-shrink-0 ${getMatchScoreColor(version.matchScore)}`}>
+                                  {version.matchScore && !isNaN(version.matchScore) ? `${version.matchScore}%` : 'N/A'}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                          {resume.tailoredVersions.length > 2 && (
+                            <p className="text-xs text-slate-500 text-center mt-2">
+                              +{resume.tailoredVersions.length - 2} more versions
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                   
-                  {/* Action Buttons */}
-                  <div className="flex items-center space-x-2">
+                  {/* Right Section: Action Buttons */}
+                  <div className="flex items-center space-x-2 ml-4">
                     <button
                       onClick={() => router.push(resume.type === 'tailored' ? `/dashboard/preview/${resumeId}` : `/dashboard/view/${resumeId}`)}
-                      className="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-slate-300 bg-slate-700/50 border border-slate-600/50 rounded-md hover:bg-slate-700 hover:text-white transition-colors"
+                      className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-slate-300 bg-slate-700/50 border border-slate-600/50 rounded-lg hover:bg-slate-700 hover:text-white transition-all duration-200 hover:scale-105"
+                      title="View resume"
                     >
-                      <EyeIcon className="h-4 w-4 mr-1.5" />
+                      <EyeIcon className="h-4 w-4 mr-2" />
                       View
                     </button>
                     
                     <button
                       onClick={() => handleDownload(resumeId, resume.title, resume.type === 'original')}
-                      className="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-slate-300 bg-slate-700/50 border border-slate-600/50 rounded-md hover:bg-slate-700 hover:text-white transition-colors"
+                      className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-slate-300 bg-slate-700/50 border border-slate-600/50 rounded-lg hover:bg-slate-700 hover:text-white transition-all duration-200 hover:scale-105"
+                      title="Download resume"
                     >
-                      <ArrowDownTrayIcon className="h-4 w-4 mr-1.5" />
+                      <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
                       Download
                     </button>
                     
                     <button
                       onClick={() => router.push(`/dashboard/tailor?resumeId=${resumeId}`)}
-                      className="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-purple-400 bg-purple-500/10 border border-purple-500/50 rounded-md hover:bg-purple-500/20 hover:text-purple-300 transition-colors"
+                      className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-purple-400 bg-purple-500/10 border border-purple-500/50 rounded-lg hover:bg-purple-500/20 hover:text-purple-300 transition-all duration-200 hover:scale-105"
+                      title="Tailor resume"
                     >
-                      <PencilIcon className="h-4 w-4 mr-1.5" />
+                      <PencilIcon className="h-4 w-4 mr-2" />
                       Tailor
                     </button>
                     
                     <button
                       onClick={() => handleDelete(resumeId, resume.type === 'original')}
-                      className="inline-flex items-center justify-center w-8 h-8 text-red-400 bg-red-500/10 border border-red-500/50 rounded-md hover:bg-red-500/20 hover:text-red-300 transition-colors"
+                      className="inline-flex items-center justify-center w-10 h-10 text-red-400 bg-red-500/10 border border-red-500/50 rounded-lg hover:bg-red-500/20 hover:text-red-300 transition-all duration-200 hover:scale-105"
+                      title="Delete resume"
                     >
                       <TrashIcon className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
-
-                {/* Bottom Row: Metadata */}
-                <div className="flex flex-wrap items-center gap-4 text-sm text-slate-400">
-                  <div className="flex items-center gap-1.5">
-                    <DocumentDuplicateIcon className="h-4 w-4 text-slate-500" />
-                    <span className="truncate">{resume.fileName || 'Text input'}</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-1.5">
-                    <CalendarIcon className="h-4 w-4 text-slate-500" />
-                    <span>{formatDate(resume.createdAt)}</span>
-                  </div>
-                </div>
-
-                {/* Job Info for Tailored Resumes */}
-                {resume.type === 'tailored' && (resume.jobTitle || resume.company) && (
-                  <div className="mt-4 p-3 bg-slate-700/30 rounded-lg border border-slate-600/30">
-                    <div className="flex items-start space-x-2">
-                      <BriefcaseIcon className="h-4 w-4 text-slate-400 mt-0.5 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        {resume.jobTitle && (
-                          <p className="text-sm font-medium text-white truncate">
-                            {resume.jobTitle}
-                          </p>
-                        )}
-                        {resume.company && (
-                          <p className="text-xs text-slate-400 truncate">{resume.company}</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Tailored Versions for Original Resumes */}
-                {resume.type === 'original' && resume.tailoredVersions && resume.tailoredVersions.length > 0 && (
-                  <div className="mt-4">
-                    <p className="text-xs text-slate-400 mb-2 flex items-center">
-                      <SparklesIcon className="h-3 w-3 mr-1" />
-                      {resume.tailoredVersions.length} tailored version(s)
-                    </p>
-                    <div className="space-y-1">
-                      {resume.tailoredVersions.slice(0, 2).map((version, index) => (
-                        <div key={index} className="flex items-center justify-between text-xs bg-slate-700/20 rounded px-2 py-1.5">
-                          <span className="text-slate-300 truncate flex-1 mr-2">{version.jobTitle}</span>
-                          <span className={`font-medium flex-shrink-0 ${getMatchScoreColor(version.matchScore)}`}>
-                            {version.matchScore && !isNaN(version.matchScore) ? `${version.matchScore}%` : 'N/A'}
-                          </span>
-                        </div>
-                      ))}
-                      {resume.tailoredVersions.length > 2 && (
-                        <p className="text-xs text-slate-500 text-center py-1">
-                          +{resume.tailoredVersions.length - 2} more
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
               </Card>
             );
           })}

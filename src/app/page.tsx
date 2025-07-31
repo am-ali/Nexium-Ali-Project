@@ -61,18 +61,19 @@ export default function HomePage() {
                 
                 <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-xl p-8 shadow-xl">
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
+                        <div className="flex flex-col items-center">
                             <Input 
                                 placeholder="Enter your email to get started" 
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="bg-slate-700/50 border-slate-600/50 text-white placeholder-slate-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                className="bg-slate-700/50 border-slate-600/50 text-white placeholder-slate-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent w-full max-w-full"
                                 required
+                                style={{ minWidth: 0 }}
                             />
                         </div>
                         {error && (
-                            <p className="text-red-400 text-sm">{error}</p>
+                            <p className="text-red-400 text-sm text-center">{error}</p>
                         )}
                         <Button 
                             type="submit" 

@@ -69,6 +69,45 @@ export default function ResumesPage() {
     }
   };
 
+  // Helper function to safely format dates
+  const formatDate = (dateString: string | undefined | null): string => {
+    if (!dateString) return 'Unknown date';
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return 'Invalid date';
+      }
+      return formatDistanceToNow(date, { addSuffix: true });
+    } catch (error) {
+      console.error('Date formatting error:', error);
+      return 'Invalid date';
+    }
+  };
+
+  // Helper function to safely calculate average
+  const calculateAverageMatchScore = (): number => {
+    const resumesWithScores = resumes.filter(r => r.matchScore && !isNaN(r.matchScore));
+    if (resumesWithScores.length === 0) return 0;
+    
+    const sum = resumesWithScores.reduce((acc, r) => acc + (r.matchScore || 0), 0);
+    return Math.round(sum / resumesWithScores.length);
+  };
+
+  // Helper function to safely filter resumes by date
+  const getThisWeekCount = (): number => {
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    return resumes.filter(r => {
+      if (!r.createdAt) return false;
+      try {
+        const resumeDate = new Date(r.createdAt);
+        return !isNaN(resumeDate.getTime()) && resumeDate > oneWeekAgo;
+      } catch {
+        return false;
+      }
+    }).length;
+  };
+
   const handleDelete = async (resumeId: string, isOriginal: boolean) => {
     if (!confirm('Are you sure you want to delete this resume?')) return;
 
@@ -139,7 +178,7 @@ export default function ResumesPage() {
   });
 
   const getMatchScoreColor = (score?: number) => {
-    if (!score) return 'text-slate-400';
+    if (!score || isNaN(score)) return 'text-slate-400';
     if (score >= 80) return 'text-green-400';
     if (score >= 60) return 'text-yellow-400';
     return 'text-red-400';
@@ -237,12 +276,7 @@ export default function ResumesPage() {
             <div>
               <p className="text-sm text-slate-400">Avg Match Score</p>
               <p className="text-xl font-bold text-white">
-                {Math.round(
-                  resumes
-                    .filter(r => r.matchScore)
-                    .reduce((sum, r) => sum + (r.matchScore || 0), 0) /
-                  resumes.filter(r => r.matchScore).length || 0
-                )}%
+                {calculateAverageMatchScore()}%
               </p>
             </div>
           </div>
@@ -254,9 +288,7 @@ export default function ResumesPage() {
             <div>
               <p className="text-sm text-slate-400">This Week</p>
               <p className="text-xl font-bold text-white">
-                {resumes.filter(r => 
-                  new Date(r.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-                ).length}
+                {getThisWeekCount()}
               </p>
             </div>
           </div>
@@ -284,7 +316,7 @@ export default function ResumesPage() {
         </div>
       )}
 
-      {/* Resume List - New Row-based Design */}
+      {/* Resume List */}
       {filteredResumes.length === 0 ? (
         <Card className="p-12 text-center bg-slate-800/50 border-slate-700/50">
           <DocumentTextIcon className="h-16 w-16 mx-auto mb-4 text-slate-600" />
@@ -355,7 +387,7 @@ export default function ResumesPage() {
                       </h3>
                       <p className="text-sm text-slate-400">
                         {resume.type === 'original' ? 'Original Resume' : 'AI-Tailored'}
-                        {resume.matchScore && (
+                        {resume.matchScore && !isNaN(resume.matchScore) && (
                           <span className={`ml-2 font-medium ${getMatchScoreColor(resume.matchScore)}`}>
                             • {resume.matchScore}% match
                           </span>
@@ -399,7 +431,7 @@ export default function ResumesPage() {
                   </div>
                 </div>
 
-                {/* Bottom Row: Metadata and Job Info */}
+                {/* Bottom Row: Metadata */}
                 <div className="flex flex-wrap items-center gap-4 text-sm text-slate-400">
                   <div className="flex items-center gap-1.5">
                     <DocumentDuplicateIcon className="h-4 w-4 text-slate-500" />
@@ -408,7 +440,7 @@ export default function ResumesPage() {
                   
                   <div className="flex items-center gap-1.5">
                     <CalendarIcon className="h-4 w-4 text-slate-500" />
-                    <span>{formatDistanceToNow(new Date(resume.createdAt), { addSuffix: true })}</span>
+                    <span>{formatDate(resume.createdAt)}</span>
                   </div>
                 </div>
 
@@ -443,7 +475,7 @@ export default function ResumesPage() {
                         <div key={index} className="flex items-center justify-between text-xs bg-slate-700/20 rounded px-2 py-1.5">
                           <span className="text-slate-300 truncate flex-1 mr-2">{version.jobTitle}</span>
                           <span className={`font-medium flex-shrink-0 ${getMatchScoreColor(version.matchScore)}`}>
-                            {version.matchScore}%
+                            {version.matchScore && !isNaN(version.matchScore) ? `${version.matchScore}%` : 'N/A'}
                           </span>
                         </div>
                       ))}

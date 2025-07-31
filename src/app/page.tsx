@@ -25,16 +25,19 @@ export default function HomePage() {
                 email,
                 options: {
                     emailRedirectTo: `${window.location.origin}/auth/callback`,
+                    shouldCreateUser: true, // This will create a user if they don't exist
                 },
             });
 
             if (error) throw error;
 
-            toast.success('Check your email for the login link!');
+            toast.success('Check your email for the confirmation link!');
             router.push('/auth/verify');
         } catch (err) {
-            toast.error(err instanceof Error ? err.message : 'Failed to send login link');
-            setError(err instanceof Error ? err.message : 'Failed to send login link');
+            console.error('Auth error:', err);
+            const errorMessage = err instanceof Error ? err.message : 'Failed to send confirmation link';
+            toast.error(errorMessage);
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -73,16 +76,24 @@ export default function HomePage() {
                             />
                         </div>
                         {error && (
-                            <p className="text-red-400 text-sm text-center">{error}</p>
+                            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+                                <p className="text-red-400 text-sm text-center">{error}</p>
+                            </div>
                         )}
                         <Button 
                             type="submit" 
                             className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600" 
                             disabled={loading}
                         >
-                            {loading ? 'Sending link...' : 'Get Started'}
+                            {loading ? 'Sending confirmation link...' : 'Get Started'}
                         </Button>
                     </form>
+                    
+                    <div className="mt-6 text-center">
+                        <p className="text-xs text-slate-500">
+                            By continuing, you agree to receive emails and confirm your email address.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>

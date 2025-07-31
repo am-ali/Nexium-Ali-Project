@@ -309,7 +309,7 @@ const Preview: React.FC<PreviewProps> = ({
                         <ul className="space-y-2 text-slate-300">
                             <li className="flex items-start space-x-2">
                                 <span className="text-purple-400 mt-1">•</span>
-                                <span>Save as PDF for most applications</span>
+                                <span>Save as PDF for most applications(use print button to save as pdf)</span>
                             </li>
                             <li className="flex items-start space-x-2">
                                 <span className="text-purple-400 mt-1">•</span>

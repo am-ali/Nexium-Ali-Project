@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createClient } from '@/lib/supabase/client';
@@ -15,27 +15,45 @@ export default function HomePage() {
     const router = useRouter();
     const supabase = createClient();
 
+    // Check if user is already authenticated and verified
+    useEffect(() => {
+        const checkAuth = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user?.email_confirmed_at) {
+                router.push('/dashboard');
+            }
+        };
+        checkAuth();
+    }, [router, supabase.auth]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
 
         try {
+            // First check if user already exists and is verified
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user?.email_confirmed_at) {
+                router.push('/dashboard');
+                return;
+            }
+
             const { error } = await supabase.auth.signInWithOtp({
                 email,
                 options: {
                     emailRedirectTo: `${window.location.origin}/auth/callback`,
-                    shouldCreateUser: true, // This will create a user if they don't exist
+                    shouldCreateUser: true,
                 },
             });
 
             if (error) throw error;
 
-            toast.success('Check your email for the confirmation link!');
-            router.push('/auth/verify');
+            toast.success('Check your email for the verification link!');
+            router.push(`/auth/verify?email=${encodeURIComponent(email)}`);
         } catch (err) {
             console.error('Auth error:', err);
-            const errorMessage = err instanceof Error ? err.message : 'Failed to send confirmation link';
+            const errorMessage = err instanceof Error ? err.message : 'Failed to send verification link';
             toast.error(errorMessage);
             setError(errorMessage);
         } finally {
@@ -85,13 +103,16 @@ export default function HomePage() {
                             className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600" 
                             disabled={loading}
                         >
-                            {loading ? 'Sending confirmation link...' : 'Get Started'}
+                            {loading ? 'Sending verification link...' : 'Get Started'}
                         </Button>
                     </form>
                     
                     <div className="mt-6 text-center">
                         <p className="text-xs text-slate-500">
-                            By continuing, you agree to receive emails and confirm your email address.
+                            By continuing, you agree to receive emails and verify your email address.
+                        </p>
+                        <p className="text-xs text-red-400 mt-2 font-medium">
+                            ⚠️ You must verify your email to access the dashboard
                         </p>
                     </div>
                 </div>

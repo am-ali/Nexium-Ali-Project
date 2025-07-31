@@ -13,6 +13,15 @@ import {
   FolderIcon,
   UserCircleIcon
 } from '@heroicons/react/24/outline';
+useEffect(() => {
+  // Assuming the Supabase client creates a session or user object
+  const fetchUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setUser(user);
+  };
+  
+  fetchUser();
+ }, []);
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },

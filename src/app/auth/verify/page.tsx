@@ -1,19 +1,26 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { EnvelopeIcon, SparklesIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { EnvelopeIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button';
 
-export default function VerifyPage() {
+// Separate component that uses useSearchParams
+function VerifyContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const supabase = createClient();
   const [countdown, setCountdown] = useState(60);
   const [isResending, setIsResending] = useState(false);
   
-  const isUnconfirmed = searchParams?.get('unconfirmed') === 'true';
+  // This is safer - get URL params without useSearchParams
+  const [isUnconfirmed, setIsUnconfirmed] = useState(false);
+
+  useEffect(() => {
+    // Check URL params on client side
+    const urlParams = new URLSearchParams(window.location.search);
+    setIsUnconfirmed(urlParams.get('unconfirmed') === 'true');
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -140,5 +147,45 @@ export default function VerifyPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Loading fallback component
+function VerifyLoading() {
+  return (
+    <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 to-blue-900/20 pointer-events-none" />
+      
+      <div className="relative z-10 max-w-md w-full">
+        <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-xl p-8 shadow-xl">
+          <div className="text-center">
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
+                <EnvelopeIcon className="h-8 w-8 text-white" />
+              </div>
+            </div>
+            
+            <div className="animate-pulse space-y-4">
+              <div className="h-8 bg-slate-700/50 rounded w-3/4 mx-auto"></div>
+              <div className="h-4 bg-slate-700/50 rounded w-full"></div>
+              <div className="h-4 bg-slate-700/50 rounded w-2/3 mx-auto"></div>
+            </div>
+            
+            <div className="flex justify-center mt-6">
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-500 border-t-transparent"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function VerifyPage() {
+  return (
+    <Suspense fallback={<VerifyLoading />}>
+      <VerifyContent />
+    </Suspense>
   );
 }

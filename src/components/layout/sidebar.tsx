@@ -9,7 +9,8 @@ import {
   BriefcaseIcon, 
   SparklesIcon,
   ClockIcon,
-  FolderIcon
+  FolderIcon,
+  UserCircleIcon
 } from '@heroicons/react/24/outline';
 
 const navigation = [
@@ -25,11 +26,11 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="w-64 bg-slate-900/95 backdrop-blur-xl border-r border-slate-700/50 h-full relative">
+    <div className="w-64 bg-slate-900/95 backdrop-blur-xl border-r border-slate-700/50 h-full relative flex flex-col">
       {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 to-transparent pointer-events-none" />
       
-      <div className="relative z-10">
+      <div className="relative z-10 flex flex-col h-full">
         {/* Logo/Brand area */}
         <div className="p-6 border-b border-slate-700/50">
           <div className="flex items-center space-x-3">
@@ -43,7 +44,8 @@ export function Sidebar() {
           </div>
         </div>
 
-        <nav className="mt-8 px-4">
+        {/* Navigation - takes up available space */}
+        <nav className="flex-1 mt-8 px-4">
           <ul className="space-y-2">
             {navigation.map((item) => {
               const isActive = pathname === item.href;
@@ -81,14 +83,16 @@ export function Sidebar() {
           </ul>
         </nav>
 
-        {/* Bottom section */}
-        <div className="absolute bottom-4 left-4 right-4">
-          <div className="p-4 rounded-xl bg-gradient-to-br from-slate-800/50 to-slate-700/50 border border-slate-600/50">
+        {/* User section - properly positioned at bottom */}
+        <div className="p-4 border-t border-slate-700/50 mt-auto">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-slate-800/50 to-slate-700/50 border border-slate-600/50 hover:from-slate-800/70 hover:to-slate-700/70 transition-all duration-200">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-blue-400" />
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center flex-shrink-0">
+                <UserCircleIcon className="h-6 w-6 text-white" />
+              </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">Welcome back!</p>
-                <p className="text-xs text-slate-400">Ready to optimize?</p>
+                <p className="text-sm font-medium text-white">Muhammad Ali</p>
+                <p className="text-xs text-slate-400">Premium User</p>
               </div>
             </div>
           </div>

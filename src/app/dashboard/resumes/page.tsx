@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
-import { createClient } from '@/lib/supabase/server';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -12,11 +11,11 @@ import {
   ArrowDownTrayIcon,
   ClockIcon,
   BriefcaseIcon,
-  TrophyIcon
+  TrophyIcon,
+  CalendarIcon
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
-import ResumeManager from '@/components/resume/resume-manager';
 
 interface Resume {
   id: string;
@@ -119,6 +118,18 @@ export default function ResumesPage() {
     return 'text-red-400';
   };
 
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    } catch {
+      return 'Unknown date';
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -126,7 +137,7 @@ export default function ResumesPage() {
           <div className="h-8 bg-slate-700/50 rounded w-1/3 mb-6"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map(i => (
-              <div key={i} className="h-48 bg-slate-800/50 rounded-xl"></div>
+              <div key={i} className="h-64 bg-slate-800/50 rounded-xl"></div>
             ))}
           </div>
         </div>
@@ -262,105 +273,130 @@ export default function ResumesPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredResumes.map((resume) => (
-            <Card key={resume.id} className="p-6 bg-slate-800/50 border-slate-700/50 hover:bg-slate-800/70 transition-all group">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  {resume.type === 'original' ? (
-                    <div className="p-2 bg-blue-500/20 rounded-lg">
-                      <DocumentTextIcon className="h-5 w-5 text-blue-400" />
+            <Card key={resume.id} className="bg-slate-800/50 border-slate-700/50 hover:bg-slate-800/70 transition-all group overflow-hidden">
+              {/* Card Header */}
+              <div className="p-4 border-b border-slate-700/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3 flex-1 min-w-0">
+                    {resume.type === 'original' ? (
+                      <div className="p-2 bg-blue-500/20 rounded-lg flex-shrink-0">
+                        <DocumentTextIcon className="h-5 w-5 text-blue-400" />
+                      </div>
+                    ) : (
+                      <div className="p-2 bg-purple-500/20 rounded-lg flex-shrink-0">
+                        <SparklesIcon className="h-5 w-5 text-purple-400" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-white truncate text-sm">
+                        {resume.title || 'Untitled Resume'}
+                      </h3>
+                      <p className="text-xs text-slate-400">
+                        {resume.type === 'original' ? 'Original Resume' : 'AI-Tailored'}
+                      </p>
                     </div>
-                  ) : (
-                    <div className="p-2 bg-purple-500/20 rounded-lg">
-                      <SparklesIcon className="h-5 w-5 text-purple-400" />
+                  </div>
+                  
+                  {resume.matchScore && (
+                    <div className="text-right flex-shrink-0 ml-2">
+                      <div className={`text-lg font-bold ${getMatchScoreColor(resume.matchScore)}`}>
+                        {resume.matchScore}%
+                      </div>
+                      <p className="text-xs text-slate-400">Match</p>
                     </div>
                   )}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-white truncate">
-                      {resume.title || 'Untitled Resume'}
-                    </h3>
-                    <p className="text-xs text-slate-400">
-                      {resume.type === 'original' ? 'Original Resume' : 'AI-Tailored'}
-                    </p>
-                  </div>
                 </div>
-                
-                {resume.matchScore && (
-                  <div className="text-right">
-                    <div className={`text-lg font-bold ${getMatchScoreColor(resume.matchScore)}`}>
-                      {resume.matchScore}%
+              </div>
+
+              {/* Card Body */}
+              <div className="p-4 space-y-4">
+                {/* Job Info for Tailored Resumes */}
+                {resume.type === 'tailored' && (resume.jobTitle || resume.company) && (
+                  <div className="p-3 bg-slate-700/30 rounded-lg border border-slate-600/30">
+                    <div className="flex items-start space-x-2">
+                      <BriefcaseIcon className="h-4 w-4 text-slate-400 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        {resume.jobTitle && (
+                          <p className="text-sm font-medium text-white truncate">
+                            {resume.jobTitle}
+                          </p>
+                        )}
+                        {resume.company && (
+                          <p className="text-xs text-slate-400 truncate">{resume.company}</p>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-xs text-slate-400">Match</p>
                   </div>
                 )}
-              </div>
 
-              {/* Job Info for Tailored Resumes */}
-              {resume.type === 'tailored' && (
-                <div className="mb-4 p-3 bg-slate-700/30 rounded-lg border border-slate-600/30">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <BriefcaseIcon className="h-4 w-4 text-slate-400" />
-                    <p className="text-sm font-medium text-white truncate">
-                      {resume.jobTitle}
+                {/* Tailored Versions for Original Resumes */}
+                {resume.type === 'original' && resume.tailoredVersions && resume.tailoredVersions.length > 0 && (
+                  <div>
+                    <p className="text-xs text-slate-400 mb-2 flex items-center">
+                      <SparklesIcon className="h-3 w-3 mr-1" />
+                      {resume.tailoredVersions.length} tailored version(s)
                     </p>
+                    <div className="space-y-1">
+                      {resume.tailoredVersions.slice(0, 2).map((version, index) => (
+                        <div key={index} className="flex items-center justify-between text-xs bg-slate-700/20 rounded px-2 py-1.5">
+                          <span className="text-slate-300 truncate flex-1 mr-2">{version.jobTitle}</span>
+                          <span className={`font-medium flex-shrink-0 ${getMatchScoreColor(version.matchScore)}`}>
+                            {version.matchScore}%
+                          </span>
+                        </div>
+                      ))}
+                      {resume.tailoredVersions.length > 2 && (
+                        <p className="text-xs text-slate-500 text-center py-1">
+                          +{resume.tailoredVersions.length - 2} more
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-xs text-slate-400">{resume.company}</p>
-                </div>
-              )}
+                )}
 
-              {/* Tailored Versions for Original Resumes */}
-              {resume.type === 'original' && resume.tailoredVersions && resume.tailoredVersions.length > 0 && (
-                <div className="mb-4">
-                  <p className="text-xs text-slate-400 mb-2">
-                    {resume.tailoredVersions.length} tailored version(s)
-                  </p>
-                  <div className="space-y-1">
-                    {resume.tailoredVersions.slice(0, 2).map((version, index) => (
-                      <div key={index} className="flex items-center justify-between text-xs bg-slate-700/20 rounded px-2 py-1">
-                        <span className="text-slate-300 truncate">{version.jobTitle}</span>
-                        <span className={`font-medium ${getMatchScoreColor(version.matchScore)}`}>
-                          {version.matchScore}%
-                        </span>
-                      </div>
-                    ))}
+                {/* File Info */}
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center text-slate-400 truncate flex-1 mr-2">
+                    <span className="truncate">{resume.fileName || 'Text input'}</span>
+                  </div>
+                  <div className="flex items-center text-slate-400 flex-shrink-0">
+                    <CalendarIcon className="h-3 w-3 mr-1" />
+                    <span>{formatDate(resume.createdAt)}</span>
                   </div>
                 </div>
-              )}
-
-              <div className="flex items-center justify-between text-xs text-slate-400 mb-4">
-                <span>{resume.fileName || 'Text input'}</span>
-                <span>{new Date(resume.createdAt).toLocaleDateString()}</span>
               </div>
 
-              {/* Actions */}
-              <div className="flex space-x-2">
-                <Link 
-                  href={resume.type === 'tailored' ? `/dashboard/preview/${resume.id}` : `/dashboard/view/${resume.id}`}
-                  className="flex-1"
-                >
-                  <Button size="sm" variant="outline" className="w-full text-xs">
-                    <EyeIcon className="h-3 w-3 mr-1" />
-                    View
+              {/* Card Footer */}
+              <div className="p-4 pt-0">
+                <div className="flex space-x-2">
+                  <Link 
+                    href={resume.type === 'tailored' ? `/dashboard/preview/${resume.id}` : `/dashboard/view/${resume.id}`}
+                    className="flex-1"
+                  >
+                    <Button size="sm" variant="outline" className="w-full text-xs h-8">
+                      <EyeIcon className="h-3 w-3 mr-1" />
+                      View
+                    </Button>
+                  </Link>
+                  
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="text-xs h-8 px-2"
+                    onClick={() => handleDownload(resume.id, resume.title, resume.type === 'original')}
+                  >
+                    <ArrowDownTrayIcon className="h-3 w-3" />
                   </Button>
-                </Link>
-                
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="text-xs"
-                  onClick={() => handleDownload(resume.id, resume.title, resume.type === 'original')}
-                >
-                  <ArrowDownTrayIcon className="h-3 w-3 mr-1" />
-                  Download
-                </Button>
-                
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="text-xs text-red-400 hover:text-red-300"
-                  onClick={() => handleDelete(resume.id, resume.type === 'original')}
-                >
-                  <TrashIcon className="h-3 w-3" />
-                </Button>
+                  
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="text-xs text-red-400 hover:text-red-300 h-8 px-2"
+                    onClick={() => handleDelete(resume.id, resume.type === 'original')}
+                  >
+                    <TrashIcon className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
             </Card>
           ))}

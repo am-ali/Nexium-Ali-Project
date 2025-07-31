@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
 import { usePathname } from 'next/navigation';
 import { 
   HomeIcon, 
@@ -23,6 +24,8 @@ const navigation = [
 ];
 
 export function Sidebar() {
+  const supabase = createClient();
+  const [user, setUser] = useState<any>(null);
   const pathname = usePathname();
 
   return (
@@ -91,7 +94,9 @@ export function Sidebar() {
                 <UserCircleIcon className="h-6 w-6 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white">Muhammad Ali</p>
+                <p className="text-sm font-medium text-white truncate">
+                    {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Muhammad Ali'}
+                  </p>
                 <p className="text-xs text-slate-400">Premium User</p>
               </div>
             </div>

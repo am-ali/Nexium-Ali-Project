@@ -251,7 +251,7 @@ const ResumeManager: React.FC<ResumeManagerProps> = () => {
                     >
                       <EyeIcon className="h-4 w-4 mr-1.5" />
                       View
-                    </b+tton>
+                    </button>
                     
                     <button
                       onClick={() => {
